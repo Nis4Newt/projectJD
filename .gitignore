@@ -9,6 +9,9 @@ JungleDice/[Uu]ser[Ss]ettings/
 JungleDice/ExportedObj/
 JungleDice/MemoryCaptures/
 
+# Plastic SCM
+JungleDice/.plastic/
+
 # Unity 자동 생성 파일
 JungleDice/.vsconfig
 JungleDice/sysinfo.txt
