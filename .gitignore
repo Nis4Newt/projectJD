@@ -1,0 +1,26 @@
+# Unity 생성 디렉터리
+JungleDice/[Ll]ibrary/
+JungleDice/[Tt]emp/
+JungleDice/[Oo]bj/
+JungleDice/[Bb]uild/
+JungleDice/[Bb]uilds/
+JungleDice/[Ll]ogs/
+JungleDice/[Uu]ser[Ss]ettings/
+JungleDice/ExportedObj/
+JungleDice/MemoryCaptures/
+
+# Unity 자동 생성 파일
+JungleDice/.vsconfig
+JungleDice/sysinfo.txt
+
+# Visual Studio / Rider IDE
+.vs/
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
