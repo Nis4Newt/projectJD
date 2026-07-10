@@ -11,4 +11,8 @@ namespace JungleDice.Core.Event
     public record AppPauseChanged(bool IsPaused);
     public record AppFocusChanged(bool HasFocus);
     public record AppQuitRequested();
+
+    // 씬 시스템
+    public record SceneLoadRequested(string SceneName);
+    public record SceneLoadCompleted(string SceneName);
 }
