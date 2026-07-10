@@ -5,10 +5,8 @@ using JungleDice.Core.Event;
 
 namespace JungleDice.Core
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : Singleton<GameManager>
     {
-        public static GameManager Instance { get; private set; }
-
         public GameState CurrentState { get; private set; } = GameState.None;
 
         private static readonly Dictionary<GameState, HashSet<GameState>> _validTransitions = new()
@@ -21,19 +19,7 @@ namespace JungleDice.Core
             { GameState.GameOver, new() { GameState.MainMenu, GameState.InGame } },
         };
 
-        void Awake()
-        {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            Initialize();
-        }
-
-        private void Initialize()
+        protected override void OnAwake()
         {
             StartCoroutine(BootSequence());
         }
