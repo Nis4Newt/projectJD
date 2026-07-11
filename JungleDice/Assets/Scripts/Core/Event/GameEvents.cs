@@ -15,4 +15,7 @@ namespace JungleDice.Core.Event
     // 씬 시스템
     public record SceneLoadRequested(string SceneName);
     public record SceneLoadCompleted(string SceneName);
+
+    // 씬 매니저
+    public record BootSceneReady();
 }

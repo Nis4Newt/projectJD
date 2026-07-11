@@ -39,9 +39,10 @@ EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
 ```csharp
 private static readonly Dictionary<GameState, string> _stateSceneMap = new()
 {
-    { GameState.Login,   "Login" },
+    { GameState.Boot,     "BootStrap" },
+    { GameState.Login,    "Login" },
     { GameState.MainMenu, "MainMenu" },
-    { GameState.InGame,  "InGame" },
+    { GameState.InGame,   "InGame" },
 };
 ```
 
@@ -102,6 +103,7 @@ public class SceneLoader : MonoBehaviour
 
     private static readonly Dictionary<GameState, string> _stateSceneMap = new()
     {
+        { GameState.Boot,     "BootStrap" },
         { GameState.Login,    "Login" },
         { GameState.MainMenu, "MainMenu" },
         { GameState.InGame,   "InGame" },
@@ -206,6 +208,7 @@ public record SceneLoadCompleted(string SceneName);
 | 로딩 중 재요청 (`LoadScene` 중복 호출) | 경고 로그 후 무시, 기존 로딩 계속 진행 |
 | 존재하지 않는 씬 이름 요청 | `SceneManager.LoadSceneAsync`가 에러 로그 발생, `finally`로 `IsLoading` 복구되어 이후 로드는 계속 가능 |
 | `GameStateChanged`가 매핑되지 않은 상태로 전이 (`Pause`, `GameOver`) | 씬 로드 트리거 안 함 |
+| `GameStateChanged(None, Boot)` 발행 | `Boot → "BootStrap"` 매핑은 있지만 이미 `Bootstrap` 씬이 활성 씬이므로 로드 스킵 |
 | 요청한 씬이 이미 활성 씬 | 로드 스킵 |
 | 씬 재진입으로 SceneLoader 두 번째 생성 | Awake에서 중복 감지 → Destroy(gameObject) |
 
@@ -215,13 +218,14 @@ public record SceneLoadCompleted(string SceneName);
 
 | # | 시나리오 | 기대 결과 |
 |---|----------|-----------|
-| 1 | `GameStateChanged(Boot, Login)` 발행 | SceneLoader가 "Login" 씬 자동 로드 |
-| 2 | 로딩 중 `LoadScene` 재호출 | 경고 로그, 기존 로딩에 영향 없음 |
-| 3 | 존재하지 않는 씬 이름으로 `LoadScene` 호출 | 에러 로그 발생 후에도 `IsLoading == false`로 복구 |
-| 4 | 씬 로드 완료 | `SceneLoadCompleted` 이벤트 발행, `IsLoading == false` |
-| 5 | `GameStateChanged(InGame, Pause)` 발행 | 씬 로드 트리거 안 함 (매핑 없음) |
-| 6 | 이미 활성 중인 씬으로 로드 요청 | 로드 스킵, 이벤트 미발행 |
-| 7 | 씬 재진입으로 두 번째 SceneLoader 생성 | 두 번째 인스턴스 즉시 Destroy |
+| 1 | `GameStateChanged(None, Boot)` 발행 | `Bootstrap`이 이미 활성 씬이므로 로드 스킵 (매핑은 존재하되 트리거 안 됨) |
+| 2 | `GameStateChanged(Boot, Login)` 발행 | SceneLoader가 "Login" 씬 자동 로드 |
+| 3 | 로딩 중 `LoadScene` 재호출 | 경고 로그, 기존 로딩에 영향 없음 |
+| 4 | 존재하지 않는 씬 이름으로 `LoadScene` 호출 | 에러 로그 발생 후에도 `IsLoading == false`로 복구 |
+| 5 | 씬 로드 완료 | `SceneLoadCompleted` 이벤트 발행, `IsLoading == false` |
+| 6 | `GameStateChanged(InGame, Pause)` 발행 | 씬 로드 트리거 안 함 (매핑 없음) |
+| 7 | 이미 활성 중인 씬으로 로드 요청 | 로드 스킵, 이벤트 미발행 |
+| 8 | 씬 재진입으로 두 번째 SceneLoader 생성 | 두 번째 인스턴스 즉시 Destroy |
 
 ---
 

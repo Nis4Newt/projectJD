@@ -21,6 +21,7 @@ namespace JungleDice.Core
 
         protected override void OnAwake()
         {
+            EventBus.Subscribe<BootSceneReady>(_ => ChangeState(GameState.Login));
             StartCoroutine(BootSequence());
         }
 
@@ -33,7 +34,7 @@ namespace JungleDice.Core
             // (SaveSystem 구현 후 연결)
 
             // 초기화 완료 → Boot 상태 진입
-            // SceneLoader가 GameStateChanged 구독 후 Login 씬 로드 처리
+            // Boot → Login 전이는 BootSceneManager의 BootSceneReady 수신 시 처리
             ChangeState(GameState.Boot);
         }
 
