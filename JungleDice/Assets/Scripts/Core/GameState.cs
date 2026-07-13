@@ -3,7 +3,7 @@ namespace JungleDice.Core
     public enum GameState
     {
         None,       // 초기화 전 (기본값)
-        Boot,       // 앱 최초 실행 — 코어 시스템 초기화
+        Logo,       // 앱 최초 실행 — 코어 시스템 초기화
         Login,      // 로그인 화면
         MainMenu,   // 메인 메뉴
         InGame,     // 게임 플레이 중

@@ -170,10 +170,10 @@ public class GameManager : Singleton<GameManager>
     protected override void OnAwake()
     {
         EventBus.Subscribe<GameStateChanged>(gsc => { Debug.LogError($"GameStateChanged: {gsc.Previous} → {gsc.Next}"); });
-        StartCoroutine(BootSequence());
+        StartCoroutine(LogoSequence());
     }
 
-    // BootSequence(), ChangeState(), IsValidTransition(),
+    // LogoSequence(), ChangeState(), IsValidTransition(),
     // OnApplicationPause/Focus/Quit 는 변경 없음
 }
 ```

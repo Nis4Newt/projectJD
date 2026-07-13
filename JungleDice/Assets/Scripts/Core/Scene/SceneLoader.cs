@@ -12,7 +12,7 @@ namespace JungleDice.Core.Scene
 
         private static readonly Dictionary<GameState, string> _stateSceneMap = new()
         {
-            { GameState.Boot,     "BootStrap" },
+            { GameState.Logo,     "Logo" },
             { GameState.Login,    "Login" },
             { GameState.MainMenu, "MainMenu" },
             { GameState.InGame,   "InGame" },
