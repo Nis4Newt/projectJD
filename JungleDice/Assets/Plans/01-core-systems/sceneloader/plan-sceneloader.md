@@ -1,5 +1,6 @@
 # SceneLoader 구현 계획
 
+> 상위 문서: [공용 코어 시스템 설계 계획](../plan-core-systems.md) (시스템 목록 #2)
 > Phase 1 — 세 번째 구현 대상
 > 의존 관계: GameManager (`GameStateChanged` 구독), EventBus
 > 범위: 씬 전환 핵심 로직만. 로딩 화면/전환 연출은 제외 (추후 별도 계획으로 확장)

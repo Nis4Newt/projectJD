@@ -1,5 +1,6 @@
 # Logo 씬(LogoSceneManager) 구현 계획
 
+> 상위 문서: [씬별 매니저(SceneManager) 구현 계획](../plan-scenemanager.md) (예시 스켈레톤으로 도입된 `LogoSceneManager`를 구체화)
 > Phase 1 후속 — GameManager/SceneLoader/EventBus/SceneSingleton 구현 이후 추가되는 인프라
 > 의존 관계: EventBus, GameEvents(`LogoSceneReady`), SceneSingleton
 > 범위: Logo 씬은 스플래시 이미지 노출 + 일정 시간 후 Login 씬 전환 기능만 가진다. 진행률 표시, 데이터 로드(SaveSystem 등) 작업 구조는 Login 씬에서 담당할 예정 — 이 문서 범위에서 제외

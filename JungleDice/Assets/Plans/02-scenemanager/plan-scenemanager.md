@@ -1,5 +1,6 @@
 # 씬별 매니저(SceneManager) 구현 계획
 
+> 상위 문서: [EventBus](../01-core-systems/eventbus/plan-eventbus.md), [Singleton](../01-core-systems/singleton/plan-singleton.md), [GameManager](../01-core-systems/gamemanager/plan-gamemanager.md), [SceneLoader](../01-core-systems/sceneloader/plan-sceneloader.md) (`plan-singleton.md`가 예견한 씬 스코프 싱글턴의 필요 시점이 되어 파생)
 > Phase 1 후속 — GameManager/SceneLoader/Singleton/EventBus 구현 이후 추가되는 인프라
 > 의존 관계: EventBus, GameState, SceneLoader(간접, GameState↔씬 매핑 참고)
 > 범위: 씬 진입/퇴장 시점에 그 씬만의 로직을 담당하는 씬-로컬 매니저 베이스. UI 시스템(UIManager)이나 씬 전환 연출은 제외

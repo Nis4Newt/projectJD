@@ -1,5 +1,6 @@
 # Singleton<T> 구현 계획
 
+> 상위 문서: [GameManager 구현 계획](../gamemanager/plan-gamemanager.md), [SceneLoader 구현 계획](../sceneloader/plan-sceneloader.md) (두 시스템의 중복 보일러플레이트를 통합하며 파생)
 > Phase 1 — 리팩터링 (신규 시스템 아님)
 > 의존 관계: 없음 (`GameManager`, `SceneLoader`가 이 클래스로 마이그레이션됨)
 > 범위: MonoBehaviour 싱글턴 보일러플레이트 통합. 씬 스코프 싱글턴(파괴 시 재생성 등)은 이번 범위에서 제외

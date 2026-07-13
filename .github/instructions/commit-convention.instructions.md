@@ -7,7 +7,7 @@ applyTo: "**"
 ## 형식
 
 ```
-JD#<issue-number> <type>(<scope>): <subject>
+[#<issue-number>] JD [자동] <type>(<scope>): <subject>
 ```
 
 ## Issue Number
