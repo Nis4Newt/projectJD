@@ -17,5 +17,5 @@ namespace JungleDice.Core.Event
     public record SceneLoadCompleted(string SceneName);
 
     // 씬 매니저
-    public record BootSceneReady();
+    public record LogoSceneReady();
 }

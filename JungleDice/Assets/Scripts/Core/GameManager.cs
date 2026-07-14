@@ -11,7 +11,7 @@ namespace JungleDice.Core
 
         private static readonly Dictionary<GameState, HashSet<GameState>> _validTransitions = new()
         {
-            { GameState.Boot,     new() { GameState.Login } },
+            { GameState.Logo,     new() { GameState.Login } },
             { GameState.Login,    new() { GameState.MainMenu } },
             { GameState.MainMenu, new() { GameState.InGame } },
             { GameState.InGame,   new() { GameState.Pause, GameState.GameOver } },
@@ -21,11 +21,11 @@ namespace JungleDice.Core
 
         protected override void OnAwake()
         {
-            EventBus.Subscribe<BootSceneReady>(_ => ChangeState(GameState.Login));
-            StartCoroutine(BootSequence());
+            EventBus.Subscribe<LogoSceneReady>(_ => ChangeState(GameState.Login));
+            StartCoroutine(LogoSequence());
         }
 
-        private IEnumerator BootSequence()
+        private IEnumerator LogoSequence()
         {
             // 코어 시스템이 Awake 완료될 때까지 1프레임 대기
             yield return null;
@@ -33,9 +33,9 @@ namespace JungleDice.Core
             // SaveSystem에서 설정 로드
             // (SaveSystem 구현 후 연결)
 
-            // 초기화 완료 → Boot 상태 진입
-            // Boot → Login 전이는 BootSceneManager의 BootSceneReady 수신 시 처리
-            ChangeState(GameState.Boot);
+            // 초기화 완료 → Logo 상태 진입
+            // Logo → Login 전이는 LogoSceneManager의 LogoSceneReady 수신 시 처리
+            ChangeState(GameState.Logo);
         }
 
         public void ChangeState(GameState next)
@@ -56,7 +56,7 @@ namespace JungleDice.Core
 
         private bool IsValidTransition(GameState from, GameState to)
         {
-            // None → 어디든 허용 (초기 Boot 진입)
+            // None → 어디든 허용 (초기 Logo 진입)
             if (from == GameState.None) return true;
             return _validTransitions.TryGetValue(from, out var allowed) && allowed.Contains(to);
         }

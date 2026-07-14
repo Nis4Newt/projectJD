@@ -23,7 +23,7 @@
 public enum GameState
 {
     None,       // 초기화 전 (기본값)
-    Boot,       // 앱 최초 실행 — 코어 시스템 초기화
+    Logo,       // 앱 최초 실행 — 코어 시스템 초기화
     Login,      // 로그인 화면
     MainMenu,   // 메인 메뉴
     InGame,     // 게임 플레이 중
@@ -35,7 +35,7 @@ public enum GameState
 ### 허용된 상태 전이
 
 ```
-Boot ──────→ Login
+Logo ──────→ Login
 Login ─────→ MainMenu
 MainMenu ──→ InGame
 InGame ────→ Pause
@@ -111,7 +111,7 @@ public class GameManager : MonoBehaviour
     // 허용된 상태 전이 테이블
     private static readonly Dictionary<GameState, HashSet<GameState>> _validTransitions = new()
     {
-        { GameState.Boot,     new() { GameState.Login } },
+        { GameState.Logo,     new() { GameState.Login } },
         { GameState.Login,    new() { GameState.MainMenu } },
         { GameState.MainMenu, new() { GameState.InGame } },
         { GameState.InGame,   new() { GameState.Pause, GameState.GameOver } },
@@ -126,7 +126,7 @@ public class GameManager : MonoBehaviour
         // 코어 시스템 초기화 순서
         // 1. EventBus — 정적 클래스라 별도 초기화 불필요
         // 2. 이후 시스템은 각 시스템의 Awake에서 자체 초기화
-        ChangeState(GameState.Boot);
+        ChangeState(GameState.Logo);
     }
 
     public void ChangeState(GameState next)
@@ -147,7 +147,7 @@ public class GameManager : MonoBehaviour
 
     private bool IsValidTransition(GameState from, GameState to)
     {
-        // None → 어디든 허용 (초기 Boot 진입)
+        // None → 어디든 허용 (초기 Logo 진입)
         if (from == GameState.None) return true;
         return _validTransitions.TryGetValue(from, out var allowed) && allowed.Contains(to);
     }
@@ -232,10 +232,10 @@ GameManager는 코어 시스템의 초기화 순서를 조율하는 루트다.
 
 ## Unity 씬 구성
 
-### Bootstrap 씬 구조
+### Logo 씬 구조
 
 ```
-[Scene: Bootstrap]
+[Scene: Logo]
 └── GameManagers (GameObject, DontDestroyOnLoad)
     ├── GameManager.cs
     ├── SceneLoader.cs
@@ -244,15 +244,15 @@ GameManager는 코어 시스템의 초기화 순서를 조율하는 루트다.
     └── SaveSystem.cs
 ```
 
-- 앱 최초 진입 씬은 항상 `Bootstrap`
-- Bootstrap에서 코어 시스템 초기화 완료 후 `Login` 씬으로 자동 전환
+- 앱 최초 진입 씬은 항상 `Logo`
+- Logo에서 코어 시스템 초기화 완료 후 `Login` 씬으로 자동 전환
 - `GameManagers` 오브젝트는 `DontDestroyOnLoad`로 유지
 
-### Bootstrap → Login 자동 전환
+### Logo → Login 자동 전환
 
 ```csharp
 // GameManager.Initialize() 에서
-IEnumerator BootSequence()
+IEnumerator LogoSequence()
 {
     // 1. 코어 시스템이 Awake 완료될 때까지 1프레임 대기
     yield return null;
@@ -261,7 +261,7 @@ IEnumerator BootSequence()
     // (SaveSystem 구현 후 연결)
 
     // 3. 초기화 완료 → Login 로드
-    ChangeState(GameState.Boot);
+    ChangeState(GameState.Logo);
     // SceneLoader가 GameStateChanged 구독 후 Login 로드 처리
 }
 ```
@@ -284,10 +284,10 @@ IEnumerator BootSequence()
 
 | # | 시나리오 | 기대 결과 |
 |---|----------|-----------|
-| 1 | 앱 시작 → Initialize | GameState.Boot, GameStateChanged(None, Boot) 발행 |
-| 2 | Boot → Login 전이 | CurrentState == Login, 이벤트 발행 |
+| 1 | 앱 시작 → Initialize | GameState.Logo, GameStateChanged(None, Logo) 발행 |
+| 2 | Logo → Login 전이 | CurrentState == Login, 이벤트 발행 |
 | 3 | Login → MainMenu 전이 | CurrentState == MainMenu, 이벤트 발행 |
-| 4 | Boot → InGame 전이 (허용 안 됨) | 경고 로그, 상태 유지 |
+| 4 | Logo → InGame 전이 (허용 안 됨) | 경고 로그, 상태 유지 |
 | 5 | InGame → InGame 재전이 | 이벤트 미발행, 상태 유지 |
 | 6 | InGame → Pause → InGame 재개 | 각 전이마다 이벤트 발행 |
 | 7 | 씬 재진입으로 두 번째 GameManager 생성 | 두 번째 인스턴스 즉시 Destroy |
@@ -298,7 +298,7 @@ IEnumerator BootSequence()
 
 ## 구현 시 주의사항
 
-- **Bootstrap 씬 필수**: GameManager는 반드시 Bootstrap 씬에만 배치. 다른 씬에 배치 시 중복 방지 로직이 동작하지만 초기화 순서가 꼬일 수 있음.
+- **Logo 씬 필수**: GameManager는 반드시 Logo 씬에만 배치. 다른 씬에 배치 시 중복 방지 로직이 동작하지만 초기화 순서가 꼬일 수 있음.
 - **ChangeState 직접 호출 제한**: 게임 로직에서 직접 호출보다 EventBus를 통해 상태 전이를 요청하는 패턴도 고려. 현재는 직접 호출 허용.
 - **OnApplicationPause 신뢰성**: Android에서 `OnApplicationPause`와 `OnApplicationFocus` 동작이 기기/OS 버전마다 상이할 수 있음. 두 콜백 모두 처리하여 커버.
 - **DontDestroyOnLoad 오브젝트 정리**: 여러 시스템이 같은 `GameManagers` GameObject 하위에 묶여 있어야 씬 재진입 시 일괄 중복 방지 가능.
@@ -310,7 +310,7 @@ IEnumerator BootSequence()
 - [ ] `GameState.cs` 열거형 파일 작성
 - [ ] `GameManager.cs` 작성 (싱글턴, 상태 전이, 앱 생명주기)
 - [ ] `GameEvents.cs`에 `AppPauseChanged`, `AppFocusChanged`, `AppQuitRequested` 추가
-- [ ] Bootstrap 씬 생성 및 `GameManagers` 오브젝트 구성
+- [ ] Logo 씬 생성 및 `GameManagers` 오브젝트 구성
 - [ ] Script Execution Order 설정 (-100)
 - [ ] 테스트 시나리오 8개 검증
 - [ ] SceneLoader 연동 테스트 (다음 단계 연결 확인)

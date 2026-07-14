@@ -28,7 +28,7 @@
 **역할**: 게임 전체 생명주기 관리, 각 시스템의 루트 진입점
 
 ### 책임
-- 게임 상태(State) 관리: `Boot → MainMenu → InGame → Pause → GameOver`
+- 게임 상태(State) 관리: `Logo → MainMenu → InGame → Pause → GameOver`
 - 앱 포커스/정지/재개 처리 (`OnApplicationPause`, `OnApplicationFocus`)
 - 코어 시스템 초기화 순서 조율
 - `DontDestroyOnLoad` 루트 오브젝트 역할
