@@ -6,29 +6,20 @@ using JungleDice.Core.Event;
 
 namespace JungleDice.Core.Scene
 {
-    public class SceneLoader : MonoBehaviour
+    public class SceneLoader : Singleton<SceneLoader>
     {
-        public static SceneLoader Instance { get; private set; }
-
         public bool IsLoading { get; private set; }
 
         private static readonly Dictionary<GameState, string> _stateSceneMap = new()
         {
+            { GameState.Boot,     "BootStrap" },
             { GameState.Login,    "Login" },
             { GameState.MainMenu, "MainMenu" },
             { GameState.InGame,   "InGame" },
         };
 
-        void Awake()
+        protected override void OnAwake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-
             EventBus.Subscribe<GameStateChanged>(OnGameStateChanged);
         }
 

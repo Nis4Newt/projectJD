@@ -5,10 +5,8 @@ using JungleDice.Core.Event;
 
 namespace JungleDice.Core
 {
-    public class GameManager : MonoBehaviour
+    public class GameManager : Singleton<GameManager>
     {
-        public static GameManager Instance { get; private set; }
-
         public GameState CurrentState { get; private set; } = GameState.None;
 
         private static readonly Dictionary<GameState, HashSet<GameState>> _validTransitions = new()
@@ -21,20 +19,9 @@ namespace JungleDice.Core
             { GameState.GameOver, new() { GameState.MainMenu, GameState.InGame } },
         };
 
-        void Awake()
+        protected override void OnAwake()
         {
-            if (Instance != null && Instance != this)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-            DontDestroyOnLoad(gameObject);
-            Initialize();
-        }
-
-        private void Initialize()
-        {
+            EventBus.Subscribe<BootSceneReady>(_ => ChangeState(GameState.Login));
             StartCoroutine(BootSequence());
         }
 
@@ -47,7 +34,7 @@ namespace JungleDice.Core
             // (SaveSystem 구현 후 연결)
 
             // 초기화 완료 → Boot 상태 진입
-            // SceneLoader가 GameStateChanged 구독 후 Login 씬 로드 처리
+            // Boot → Login 전이는 BootSceneManager의 BootSceneReady 수신 시 처리
             ChangeState(GameState.Boot);
         }
 
