@@ -1,5 +1,6 @@
 # GameManager 구현 계획
 
+> 상위 문서: [공용 코어 시스템 설계 계획](../plan-core-systems.md) (시스템 목록 #1)
 > Phase 1 — 두 번째 구현 대상  
 > 의존 관계: EventBus (GameStateChanged 이벤트 발행)
 
