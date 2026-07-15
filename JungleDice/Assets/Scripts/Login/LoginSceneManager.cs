@@ -11,8 +11,9 @@ namespace JungleDice.Login
         {
             _subs.Add(EventBus.Subscribe<AppFocusChanged>(OnAppFocusChanged));
 
-            // 씬 진입 시 초기화 로직 (자동 로그인 시도 등)
-            // TryAutoLogin();
+            // TODO(plan-loginscene-googleauth.md): 실제 Google 로그인 자동 시도로 교체
+            // 지금은 Login 씬 진입 시 로그인에 성공했다고 가정하고 즉시 발행
+            EventBus.Publish(new GoogleLoginSucceeded());
         }
 
         private void OnAppFocusChanged(AppFocusChanged e)
