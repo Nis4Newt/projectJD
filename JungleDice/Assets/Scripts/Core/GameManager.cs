@@ -22,6 +22,7 @@ namespace JungleDice.Core
         protected override void OnAwake()
         {
             EventBus.Subscribe<LogoSceneReady>(_ => ChangeState(GameState.Login));
+            EventBus.Subscribe<LoginSceneReady>(_ => ChangeState(GameState.MainMenu));
             StartCoroutine(LogoSequence());
         }
 

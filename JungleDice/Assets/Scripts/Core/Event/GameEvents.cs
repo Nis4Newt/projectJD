@@ -18,4 +18,8 @@ namespace JungleDice.Core.Event
 
     // 씬 매니저
     public record LogoSceneReady();
+    public record LoginSceneReady();
+
+    // Login 씬 — Google 로그인 (plan-loginscene-googleauth.md에서 확정 예정, 시그니처만 선반영)
+    public record GoogleLoginSucceeded();
 }
