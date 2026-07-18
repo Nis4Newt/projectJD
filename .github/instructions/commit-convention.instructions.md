@@ -2,18 +2,28 @@
 applyTo: "**"
 ---
 
+# 커밋 분류
+
+변경 내용을 기능에 따라 분류하여 여러개의 커밋으로 나누어 작성
+
 # 커밋 메시지 컨벤션
 
 ## 형식
 
 ```
-[#<issue-number>] JD [자동] <type>(<scope>): <subject>
+[#<issue-number>] JD [자동] <대주제> > <type>(<scope>): <subject>
 ```
 
 ## Issue Number
 
 - branch 이름에 이슈 번호가 포함되어 있는 경우, 커밋 메시지에도 이슈 번호를 포함
 - 이슈 번호 없으면 0번으로 표기
+
+## 대주제
+
+- 작업 내용을 포괄하는 짧은 문장
+  - 예: "JD#123 주사위 추가 > feat(gameplay): 주사위 코드 생성
+  - 예: "JD#123 주사위 추가 > feat(gameplay): 주사위 애니메이션 추가
 
 ## Type
 

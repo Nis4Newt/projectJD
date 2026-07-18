@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using JungleDice.Core;
 using JungleDice.Core.Event;
+using JungleDice.Core.Table;
 
 namespace JungleDice.Login
 {
@@ -9,7 +10,7 @@ namespace JungleDice.Login
     {
         private static readonly LoginTask[] _tasks =
         {
-            new("설정 로드", () => PlaceholderTask(0.3f)),
+            new("설정 로드", TableLoader.LoadAllRoutine),
             new("유저 데이터 로드", () => PlaceholderTask(0.5f)),
             new("서버 시간 동기화", () => PlaceholderTask(0.3f)),
         };
