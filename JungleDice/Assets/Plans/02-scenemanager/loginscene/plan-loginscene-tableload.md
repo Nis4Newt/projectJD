@@ -155,7 +155,7 @@ Assets/Scripts/
 
 ## 구현 시 주의사항
 
-- **`TableLoader`는 `Core/Table/`(런타임)에 두고 `Editor/Table/`(에디터 전용)과 절대 혼동하지 않는다**: `TableGenerator`는 `.txt → .asset` 변환용 에디터 전용 코드이고, `TableLoader`는 이미 생성된 `.asset`을 런타임에 미리 읽어들이는 별개의 코드다.
+- **`TableLoader`는 `Core/Table/`(런타임)에 두고 `Editor/Table/`(에디터 전용)과 절대 혼동하지 않는다**: `TableGenerator`는 `.csv → .asset` 변환용 에디터 전용 코드이고, `TableLoader`는 이미 생성된 `.asset`을 런타임에 미리 읽어들이는 별개의 코드다.
 - **`FindAllTableTypes`의 스캔 조건은 `TableAssetBase` 상속 여부만 본다**: 파일명 매칭이 아니므로 `TableGenerator.FindTableType`과 로직을 공유할 필요는 없다(목적이 다른 별도 헬퍼로 유지).
 - **테이블별 실패를 흡수해 로그인 흐름을 막지 않는 것은 의도된 동작**: 여기서 try/catch를 추가해 "전체 실패 시 재시도" 같은 로직을 넣지 않는다(범위 밖, YAGNI) — asset 누락은 `LogError`로 충분히 드러난다.
 - **테이블 개수가 늘어나 로딩 시간이 체감될 정도가 되면**: `yield return null`(1테이블/프레임)이 아니라 일정 개수씩 묶어 처리하거나, task별 세부 진행률 이벤트를 추가하는 것을 고려할 수 있음 — 지금은 필요성이 확인되지 않았으므로 범위 밖.
