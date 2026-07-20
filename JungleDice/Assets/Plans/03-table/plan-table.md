@@ -90,6 +90,32 @@ protected bool TryGet(TKey key, out TData data) => Map.TryGetValue(key, out data
 - `Map`은 여전히 `Dictionary<TKey, TData>`를 지연 생성(lazy) 후 캐시 — 최초 접근 시 1회만 `_rows`를 순회해 O(1) 조회로 전환 (변경 없음)
 - 단순 key 조회만 필요한 테이블은 한 줄만 추가하면 됨: `public TData Get(TKey key) => this[key];` — "빈 클래스" 원칙은 폐기하지만 보일러플레이트는 여전히 최소
 
+### 존재하지 않는 key 처리 컨벤션 (`CardTable`에서 확립)
+
+`this[key]` 인덱서는 내부 `Dictionary`의 인덱싱을 그대로 노출하므로, 없는 key를 넘기면 `KeyNotFoundException`이 던져진다. 이는 시스템 전반의 원칙("데이터 부재는 기획 이슈지 크래시 사유가 아님" — 엣지 케이스 표 참고)과 어긋난다. 따라서 테이블 클래스가 **외부에 공개하는 조회 메서드는 인덱서가 아니라 `TryGet`을 거쳐야 한다**.
+
+`CardTable`(`Assets/Scripts/Data/Table/CardTable.cs`)에서 이 패턴을 실사용 예시로 확립:
+
+```csharp
+public CardTableData Get(int key)
+{
+    if (TryGet(key, out var data))
+    {
+        return data;
+    }
+    Debug.LogError($"[Table] {nameof(CardTable)} key 없음: {key}");
+    return null;
+}
+```
+
+- 컬럼별 getter(`GetCardName`, `GetAtt`, `GetHp`, `GetCond`, `GetTarget`, `GetExplain`)도 `Get(key)?.필드`로 위임하지 않고 각자 `TryGet`을 직접 호출 — 호출마다 조회가 한 번씩 더 생기지만, 각 getter가 자신의 default 값과 로그 메시지를 독립적으로 갖도록 명시적으로 분리
+- 없는 key일 때 반환값은 필드 타입별 default: `string` → `null`, `int` → `0`, `enum` → 의미상 "없음"에 가까운 값(`CardCondition.None`, `CardTarget.Same`)
+- 검토했던 대안과 기각 이유:
+  1. **예외를 그대로 던짐** — 개발 중 실수를 더 빨리 드러내지만, 전투 로직 도중 게임 전체가 죽을 위험이 있어 기각
+  2. **`LogError` 없이 조용히 default만 반환** — 크래시는 없지만 콘솔을 보지 않으면 잘못된 동작(예: 공격력 0짜리 카드)이 그대로 묻힘 — 기각
+  3. **채택: `LogError` + default 반환** — 크래시 없이 진행되면서도 원인은 콘솔에 남음. 이 시스템이 이미 파싱 실패/중복 key 등에서 쓰던 것과 동일한 원칙(엣지 케이스 표 참고)이라 일관성도 있음
+- `if (TryGet(...))`처럼 한 줄로 끝나는 조건문도 항상 `{}`로 감쌈 (프로젝트 스타일)
+
 ### 가공 데이터 훅: `OnLoaded()`
 
 원본 행 그대로가 아니라 가공된 형태(등급별 그룹 `Dictionary`, 이름별 인덱스 등)로 조회하고 싶은 테이블을 위한 훅. `Dictionary` 등은 Unity가 직렬화하지 못하므로 에셋에 미리 구워둘 수 없다 — 대신 **런타임에 `Instance`를 처음 로드하는 시점**에 한 번 계산한다 (베이스가 이미 쓰고 있는 `Map => _map ??= BuildMap()` 지연 생성과 같은 사고방식을 서브클래스에도 열어주는 것).
@@ -284,7 +310,8 @@ TableAssetEditor : Editor                         (Editor 전용)
 Assets/
 ├── Tables/
 │   └── Source/
-│       └── SampleTable.csv              ← 신규, 파이프라인 검증용 예시 (id|name|value, 3행)
+│       ├── SampleTable.csv              ← 신규, 파이프라인 검증용 예시 (id|name|value, 3행)
+│       └── CardTable.csv                ← 실데이터, key|cardname|att|hp|cond|target|explain
 ├── Resources/
 │   └── Tables/                          ← 신규 폴더, 변환기가 최초 실행 시 자동 생성
 ├── Scripts/
@@ -297,7 +324,8 @@ Assets/
 │   │       └── TableValueParser.cs
 │   ├── Data/
 │   │   └── Table/                       ← 신규, 테이블 추가 시 이 폴더에 파일 추가
-│   │       └── SampleTable.cs           ← SampleTableData + SampleTable 한 파일에 (GameEvents.cs 관례처럼 관련 타입 묶음)
+│   │       ├── SampleTable.cs           ← SampleTableData + SampleTable 한 파일에 (GameEvents.cs 관례처럼 관련 타입 묶음)
+│   │       └── CardTable.cs             ← 첫 실사용 테이블 (key|cardname|att|hp|cond|target|explain, CardCondition/CardTarget enum 포함), "없는 key" 컨벤션(TryGet 기반) 확립
 │   └── Editor/
 │       └── Table/                       ← 신규
 │           ├── TableGenerator.cs
@@ -698,6 +726,7 @@ namespace JungleDice.Core.Table.Editor
 | 다른 `ScriptableObject`(테이블이 아닌 것)를 선택했을 때 이 버튼이 보이는지 | 보이지 않음 — `CustomEditor`가 `TableAssetBase`(및 그 서브클래스)에만 바인딩되므로 무관한 asset에는 영향 없음 |
 | Project 창에서 테이블 asset을 2개 이상 동시 선택 | 의도적으로 미지원. Unity가 "Multi-object editing not supported."를 표시 — 재로드는 asset을 하나씩 선택해서 사용 |
 | 외부 코드가 `table.Rows`나 `table[key]`를 직접 호출 시도 | 컴파일 에러 (`protected` 멤버) — 설계대로 동작. 테이블 클래스가 노출한 public 메서드(`Get`, `GetByGrade` 등)를 거쳐야 함 |
+| 테이블 클래스의 public 조회 메서드(`Get`, `GetCardName` 등)에 존재하지 않는 key 전달 | `this[key]` 인덱서를 직접 쓰지 않고 `TryGet` 기반으로 구현: `Debug.LogError` 후 필드 타입별 default 반환 (예외로 죽이지 않음) — `CardTable` 참고 |
 | `OnLoaded()` 오버라이드 안에서 예외 발생 | `Instance` 프로퍼티 호출부까지 그대로 전파됨 (별도 방어 없음) — 테이블 클래스 구현 버그이므로 숨기지 않고 명확히 실패시키는 쪽을 택함 |
 | `OnLoaded()`가 아직 호출되기 전에 가공 데이터 필드(`_byGrade` 등)에 접근 | 발생하지 않음 — `Instance` getter가 `Resources.Load` 성공 직후 동기적으로 `OnLoaded()`를 호출한 다음 인스턴스를 반환하므로, `Instance`를 통해 얻은 참조는 항상 가공 데이터까지 채워진 상태 |
 
@@ -717,6 +746,7 @@ namespace JungleDice.Core.Table.Editor
 | 8 | `SampleTable.asset` 선택 → Inspector 상단 "Reload" 버튼 클릭 | `SampleTable.csv`만 다시 읽어 값 갱신, 다른 테이블 asset은 건드리지 않음 |
 | 9 | 원본 `.csv`를 삭제한 상태에서 같은 버튼 클릭 | `LogError`로 경로 안내, asset 값은 그대로 유지 (크래시 없음) |
 | 10 | 런타임에서 `SampleTable.Instance.GetByName("없는이름")` 호출 | `null` 반환, 예외 없음 |
+| 11 | 런타임에서 `CardTable.Instance.GetAtt(없는key)` 호출 | `LogError` 출력, `0` 반환, 예외 없음 (`Get`/다른 컬럼 getter도 동일 패턴) |
 
 ---
 
@@ -745,6 +775,7 @@ namespace JungleDice.Core.Table.Editor
 - [x] `TableAssetEditor.cs` 작성 (`Assets/Scripts/Editor/Table/`) — 개별 asset Inspector "Reload" 버튼
 - [x] `TableBase.cs`: `Rows`/인덱서/`TryGet`을 `protected`로 변경, `protected virtual void OnLoaded()` 훅 추가, `Instance` getter에서 로드 직후 `OnLoaded()` 호출
 - [x] `SampleTable.cs` 재작성: `Get(int id)`, `GetByName(string name)` + `OnLoaded()` 오버라이드로 `_byName` 보조 인덱스 구성 (`Assets/Scripts/Data/Table/`)
+- [x] `CardTable.cs` 작성: `CardTableData`(`key|cardname|att|hp|cond|target|explain`) + `CardCondition`/`CardTarget` enum, `Get`/`GetCardName`/`GetAtt`/`GetHp`/`GetCond`/`GetTarget`/`GetExplain` 전부 `TryGet` 기반으로 구현 (없는 key는 `LogError` + default 반환) (`Assets/Scripts/Data/Table/`)
 - [ ] 컴파일 에러 없는지 확인 — Unity 배치 모드가 아니라 이미 열려있는 에디터에서 직접 확인 (동시에 같은 프로젝트를 배치 모드로 열 수 없어 자동 검증 불가)
 - [ ] 에디터에서 `Tools > Table > Generate All Tables` 메뉴 실행, `SampleTable.asset` 생성 및 3행 확인
 - [ ] `SampleTable.asset` 선택 → Inspector 상단 "Reload" 버튼 동작 확인

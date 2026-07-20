@@ -1,0 +1,93 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 369b51e7e72b41e4db470616e5e4ba9e, type: 3}
+  m_Name: CardTable
+  m_EditorClassIdentifier: Assembly-CSharp::JungleDice.Data.Table.CardTable
+  _rows:
+  - key: 1000
+    cardname: "\uB300\uC9C0\uC758 \uC655"
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    explain: "\uB0B4 \uBB34\uC791\uC704 \uCE5C\uAD6C \uACF5 2\uBC30"
+  - key: 1001
+    cardname: "9\uAC1C\uC758 \uB2E4\uB9AC"
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uC0C1\uB300
+      \uBB34\uC791\uC704 \uC720\uB2DB \uD558\uB098\uC758 \uB2A5\uB825\uCE58\uAC00
+      \uC808\uBC18\uC774 \uB429\uB2C8\uB2E4."
+  - key: 1002
+    cardname: "\uB2AA\uC9C0\uC758 \uC1A1\uACF3\uB2C8"
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uC0C1\uB300
+      \uD50C\uB808\uC774\uC5B4\uC5D0\uAC8C 2\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4."
+  - key: 1003
+    cardname: "\uB545\uC758 \uADF8\uB9BC\uC790"
+    att: 2
+    hp: 2
+    cond: 2
+    target: 0
+    explain: "\uC774 \uCE5C\uAD6C\uB294 \uB2A5\uB825\uC758 \uB300\uC0C1\uC774 \uB418\uC9C0
+      \uC54A\uC2B5\uB2C8\uB2E4."
+  - key: 1004
+    cardname: "\uD30C\uB780 \uB538\uAE30"
+    att: 2
+    hp: 2
+    cond: 0
+    target: 1
+    explain: "\uBAA8\uB4E0 \uC885\uB958\uC758 \uCE5C\uAD6C\uC640 \uD569\uCE60 \uC218
+      \uC788\uC2B5\uB2C8\uB2E4."
+  - key: 1005
+    cardname: "\uC6B4\uBC18\uC790"
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uC0C1\uB300
+      \uBB34\uC791\uC704 \uCE5C\uAD6C\uC5D0\uAC8C 1\uC758 \uB370\uBBF8\uC9C0\uB97C
+      \uC90D\uB2C8\uB2E4."
+  - key: 1006
+    cardname: "\uBC14\uB2E4\uC758 \uC218\uD638\uC790"
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uBAA8\uD5D8\uAC00\uC758
+      \uC0DD\uBA85\uB825\uC744 2 \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+  - key: 1007
+    cardname: "\uBB3C\uB801\uD55C \uB3CC"
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    explain: "\uD569\uCCD0\uC9C8\uB54C \uCC9C\uBCF4"
+  - key: 1008
+    cardname: "\uBFD4\uB2EC\uB9B0 \uB9D0"
+    att: 4
+    hp: 1
+    cond: 0
+    target: 0
+    explain: "\uB2A5\uB825X"
+  - key: 1009
+    cardname: "\uC544\uB97C\uB77C\uC2A4"
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    explain: "\uB0B4 \uBB34\uC791\uC704 \uCE5C\uAD6C \uC0DD 2\uBC30"
