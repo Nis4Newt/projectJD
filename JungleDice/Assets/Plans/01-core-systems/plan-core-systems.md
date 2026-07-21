@@ -21,6 +21,7 @@
 | 8 | InputManager | 중간 | EventBus |
 | 9 | SettingsSystem | 중간 | SaveSystem, AudioSystem |
 | 10 | LocalizationSystem | 낮음 | SaveSystem |
+| 11 | SpriteManager | 낮음 | 없음 |
 
 ---
 
@@ -282,6 +283,28 @@ LocalizationSystem.SetLanguage("en");
 
 ---
 
+## 11. SpriteManager (스프라이트 리소스 관리)
+
+**역할**: `Resources` 하위에 등록된 스프라이트를 이름만으로 조회하는 유틸리티
+
+### 책임
+- 종류(카드/아이콘 등)별로 나뉜 `Resources/Sprite/` 폴더에서 스프라이트 조회
+- `SpriteCategory` enum으로 카테고리별 실제 디렉토리 경로를 고정 관리 (임의 문자열 경로 조합 차단, 값 이름 = 폴더명)
+- 존재하지 않는 이름 조회 시 예외 대신 `null` 반환 + 경고 로그
+
+### 설계 방식
+```
+static 클래스, Resources.Load 기반 (MonoBehaviour 싱글턴 아님)
+SpriteCategory enum 값 이름을 폴더명으로 그대로 사용(category.ToString()) + 카테고리별 전용 조회 메서드 (예: GetCard(name))
+```
+
+### 주요 인터페이스
+```csharp
+Sprite cardSprite = SpriteManager.GetCard("Ace");
+```
+
+---
+
 ## 폴더 구조 (제안)
 
 ```
@@ -311,8 +334,10 @@ Assets/
         │   └── InputManager.cs
         ├── Settings/
         │   └── SettingsSystem.cs
-        └── Localization/
-            └── LocalizationSystem.cs
+        ├── Localization/
+        │   └── LocalizationSystem.cs
+        └── Sprites/
+            └── SpriteManager.cs
 ```
 
 ---
@@ -327,7 +352,7 @@ Phase 2 — 데이터 계층
   SaveSystem → SettingsSystem → AudioSystem
 
 Phase 3 — 성능 / 편의
-  ObjectPool → InputManager → LocalizationSystem
+  ObjectPool → InputManager → LocalizationSystem → SpriteManager
 ```
 
 ---
