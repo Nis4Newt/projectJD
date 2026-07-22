@@ -20,10 +20,10 @@ namespace JungleDice.Core.Table.Editor
             Directory.CreateDirectory(SourceDir);
             Directory.CreateDirectory(OutputDir);
 
-            var txtFiles = Directory.GetFiles(SourceDir, "*.txt", SearchOption.TopDirectoryOnly);
+            var csvFiles = Directory.GetFiles(SourceDir, "*.csv", SearchOption.TopDirectoryOnly);
             int success = 0, failed = 0;
 
-            foreach (var path in txtFiles)
+            foreach (var path in csvFiles)
             {
                 var tableName = Path.GetFileNameWithoutExtension(path);
                 if (TryGenerateTable(tableName, path))
@@ -37,16 +37,16 @@ namespace JungleDice.Core.Table.Editor
             Debug.Log($"[TableGenerator] 완료: 성공 {success}, 실패 {failed}");
         }
 
-        /// 이미 존재하는 테이블 asset 하나만 자신의 원본 텍스트에서 다시 읽어들인다.
-        /// TableAssetEditor의 "텍스트에서 다시 로드" 버튼에서 호출.
+        /// 이미 존재하는 테이블 asset 하나만 자신의 원본 CSV에서 다시 읽어들인다.
+        /// TableAssetEditor의 "CSV에서 다시 로드" 버튼에서 호출.
         public static bool ReloadTable(TableAssetBase asset)
         {
             var tableName = asset.GetType().Name;
-            var path = $"{SourceDir}/{tableName}.txt";
+            var path = $"{SourceDir}/{tableName}.csv";
 
             if (!File.Exists(path))
             {
-                Debug.LogError($"[TableGenerator] '{tableName}' 원본 텍스트를 찾을 수 없음: {path}");
+                Debug.LogError($"[TableGenerator] '{tableName}' 원본 CSV를 찾을 수 없음: {path}");
                 return false;
             }
 
