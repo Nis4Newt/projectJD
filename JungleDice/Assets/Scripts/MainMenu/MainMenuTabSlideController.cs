@@ -1,4 +1,4 @@
-using System.Collections;
+using DG.Tweening;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -12,10 +12,11 @@ namespace JungleDice.MainMenu
         [SerializeField] private Button[] _tabButtons;         // _pages와 1:1 인덱스 대응
         [SerializeField] private GameObject[] _tabHighlights;  // 선택된 탭 표시용, _tabButtons와 1:1 대응
         [SerializeField] private float _snapDuration = 0.25f;
+        [SerializeField] private Ease _snapEase = Ease.OutQuint;
         [SerializeField] private float _flickVelocityRatio = 3f; // 초당 뷰포트 폭의 배수 — 이 이상으로 빠르게 스와이프하면 드래그 거리와 무관하게 다음/이전 페이지로 전환
 
         private ScrollRect _scrollRect;
-        private Coroutine _snapRoutine;
+        private Tween _snapTween;
 
         public int CurrentPage { get; private set; }
 
@@ -48,9 +49,7 @@ namespace JungleDice.MainMenu
             CurrentPage = index;
 
             UpdateTabHighlights(index);
-
-            if (_snapRoutine != null) StopCoroutine(_snapRoutine);
-            _snapRoutine = StartCoroutine(SnapToPageRoutine(index));
+            SnapToPage(index);
         }
 
         public void OnEndDrag(PointerEventData eventData)
@@ -94,23 +93,20 @@ namespace JungleDice.MainMenu
             return new Vector2(-pageWidth * index, _scrollRect.content.anchoredPosition.y);
         }
 
-        private IEnumerator SnapToPageRoutine(int index)
+        private void SnapToPage(int index)
         {
-            Vector2 start = _scrollRect.content.anchoredPosition;
             Vector2 target = CalculateTargetPosition(index);
 
-            float elapsed = 0f;
-            while (elapsed < _snapDuration)
-            {
-                elapsed += Time.deltaTime;
-                _scrollRect.velocity = Vector2.zero; // ScrollRect 자체 관성이 우리 Lerp와 충돌하지 않도록 매 프레임 무력화
-                _scrollRect.content.anchoredPosition = Vector2.Lerp(start, target, elapsed / _snapDuration);
-                yield return null;
-            }
+            _snapTween?.Kill();
+            _snapTween = _scrollRect.content
+                .DOAnchorPos(target, _snapDuration)
+                .SetEase(_snapEase)
+                .OnUpdate(() => _scrollRect.velocity = Vector2.zero); // ScrollRect 자체 관성이 트윈과 충돌하지 않도록 매 프레임 무력화
+        }
 
-            _scrollRect.velocity = Vector2.zero;
-            _scrollRect.content.anchoredPosition = target;
-            _snapRoutine = null;
+        private void OnDestroy()
+        {
+            _snapTween?.Kill();
         }
 
 #if UNITY_EDITOR
@@ -119,11 +115,7 @@ namespace JungleDice.MainMenu
             if (!isActiveAndEnabled || !Application.isPlaying || _scrollRect == null) return;
 
             RecalculatePageWidths();
-            if (_snapRoutine != null)
-            {
-                StopCoroutine(_snapRoutine);
-                _snapRoutine = null;
-            }
+            _snapTween?.Kill();
             _scrollRect.content.anchoredPosition = CalculateTargetPosition(CurrentPage);
         }
 #endif
