@@ -25,4 +25,7 @@ namespace JungleDice.Core.Event
 
     // Login 씬 — Google 로그인 (plan-loginscene-googleauth.md에서 확정 예정, 시그니처만 선반영)
     public record GoogleLoginSucceeded();
+
+    // User 시스템 — 유저 데이터 변경 알림 (plan-mainmenuscene-userdata-hud.md)
+    public record UserDataChanged();
 }
