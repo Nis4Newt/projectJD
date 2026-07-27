@@ -10,13 +10,22 @@ namespace JungleDice.MainMenu
     {
         [SerializeField] private RectTransform[] _pages;       // Content 자식, 순서 = 페이지 순서
         [SerializeField] private Button[] _tabButtons;         // _pages와 1:1 인덱스 대응
-        [SerializeField] private GameObject[] _tabHighlights;  // 선택된 탭 표시용, _tabButtons와 1:1 대응
+        [SerializeField] private GameObject[] _tabIcons;       // 각 탭의 아이콘 이미지, _tabButtons와 1:1 대응
         [SerializeField] private float _snapDuration = 0.25f;
         [SerializeField] private Ease _snapEase = Ease.OutQuint;
         [SerializeField] private float _flickVelocityRatio = 3f; // 초당 뷰포트 폭의 배수 — 이 이상으로 빠르게 스와이프하면 드래그 거리와 무관하게 다음/이전 페이지로 전환
+        [SerializeField] private float _iconScale = 1.1f;
+        [SerializeField] private float _selectedYOffset = 10f;
+        [SerializeField] private float _selectionTweenDuration = 0.2f;
+
+        private static readonly Color _selectedIconColor = Color.white;
+        private static readonly Color _unselectedIconColor = new(0.7f, 0.7f, 0.7f, 1f); // 밝은 회색
 
         private ScrollRect _scrollRect;
         private Tween _snapTween;
+        private Image[] _iconImages;
+        private Tween[] _tabPositionTweens;
+        private Tween[] _iconScaleTweens;
 
         public int CurrentPage { get; private set; }
 
@@ -24,14 +33,20 @@ namespace JungleDice.MainMenu
         {
             _scrollRect = GetComponent<ScrollRect>();
 
-            if (_pages.Length != _tabButtons.Length || _pages.Length != _tabHighlights.Length)
+            if (_pages.Length != _tabButtons.Length || _pages.Length != _tabIcons.Length)
             {
-                Debug.LogError($"[{nameof(MainMenuTabSlideController)}] _pages/_tabButtons/_tabHighlights 길이가 일치하지 않습니다.");
+                Debug.LogError($"[{nameof(MainMenuTabSlideController)}] _pages/_tabButtons/_tabIcons 길이가 일치하지 않습니다.");
                 return;
             }
 
+            _iconImages = new Image[_tabButtons.Length];
+            _tabPositionTweens = new Tween[_tabButtons.Length];
+            _iconScaleTweens = new Tween[_tabButtons.Length];
+
             for (int i = 0; i < _tabButtons.Length; i++)
             {
+                _iconImages[i] = _tabIcons[i].GetComponent<Image>();
+
                 int index = i; // 클로저 캡처 방지
                 _tabButtons[i].onClick.AddListener(() => SetPage(index));
             }
@@ -48,13 +63,13 @@ namespace JungleDice.MainMenu
             index = Mathf.Clamp(index, 0, _pages.Length - 1);
             CurrentPage = index;
 
-            UpdateTabHighlights(index);
+            UpdateTabSelectionVisual(index);
             SnapToPage(index);
         }
 
         public void OnEndDrag(PointerEventData eventData)
         {
-            float flickThreshold = _scrollRect.viewport.rect.width * _flickVelocityRatio;            
+            float flickThreshold = _scrollRect.viewport.rect.width * _flickVelocityRatio;
             int target = Mathf.Abs(_scrollRect.velocity.x) >= flickThreshold
                 ? CurrentPage + (_scrollRect.velocity.x < 0 ? 1 : -1) // 빠른 플릭: 거리 무관하게 한 페이지 이동 (SetPage가 범위 clamp)
                 : CalculateNearestPageIndex();
@@ -62,10 +77,28 @@ namespace JungleDice.MainMenu
             SetPage(target);
         }
 
-        private void UpdateTabHighlights(int index)
+        private void UpdateTabSelectionVisual(int index)
         {
-            for (int i = 0; i < _tabHighlights.Length; i++)
-                _tabHighlights[i].SetActive(i == index);
+            for (int i = 0; i < _tabButtons.Length; i++)
+            {
+                bool selected = i == index;
+                var buttonRect = _tabButtons[i].GetComponent<RectTransform>();
+
+                Vector2 targetPos = buttonRect.anchoredPosition; // X는 HorizontalLayoutGroup이 관리하는 현재 값 그대로 유지
+                targetPos.y = selected ? _selectedYOffset : 0f;
+
+                Vector3 targetScale = selected ? Vector3.one * _iconScale : Vector3.one;
+
+                Color targetColor = selected ? _selectedIconColor : _unselectedIconColor;
+
+                _tabPositionTweens[i]?.Kill();
+                _tabPositionTweens[i] = buttonRect.DOAnchorPos(targetPos, _selectionTweenDuration).SetEase(_snapEase);
+
+                _iconScaleTweens[i]?.Kill();
+                _iconScaleTweens[i] = _tabIcons[i].transform.DOScale(targetScale, _selectionTweenDuration).SetEase(_snapEase);
+
+                _iconImages[i].color = targetColor;
+            }
         }
 
         private void RecalculatePageWidths()
@@ -101,12 +134,14 @@ namespace JungleDice.MainMenu
             _snapTween = _scrollRect.content
                 .DOAnchorPos(target, _snapDuration)
                 .SetEase(_snapEase)
-                .OnUpdate(() => _scrollRect.velocity = Vector2.zero); // ScrollRect 자체 관성이 트윈과 충돌하지 않도록 매 프레임 무력화
+                .OnUpdate(() => _scrollRect.velocity = Vector2.zero);
         }
 
         private void OnDestroy()
         {
             _snapTween?.Kill();
+            foreach (var t in _tabPositionTweens) t?.Kill();
+            foreach (var t in _iconScaleTweens) t?.Kill();
         }
 
 #if UNITY_EDITOR
@@ -115,6 +150,7 @@ namespace JungleDice.MainMenu
             if (!isActiveAndEnabled || !Application.isPlaying || _scrollRect == null) return;
 
             RecalculatePageWidths();
+            UpdateTabSelectionVisual(CurrentPage); // 리사이즈로 인한 레이아웃 리빌드가 되돌릴 수 있는 선택 탭의 Y 오프셋/스케일/색을 즉시 재적용
             _snapTween?.Kill();
             _scrollRect.content.anchoredPosition = CalculateTargetPosition(CurrentPage);
         }
