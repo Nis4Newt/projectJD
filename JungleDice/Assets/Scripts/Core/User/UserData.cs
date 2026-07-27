@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JungleDice.Core.Event;
 using UnityEngine;
 
 namespace JungleDice.Core.User
@@ -21,34 +22,57 @@ namespace JungleDice.Core.User
         public int Rank => _rank;
         public IReadOnlyList<int> Friends => _friends;
 
-        public void SetName(string name) => _name = name;
+        public void SetName(string name)
+        {
+            _name = name;
+            EventBus.Publish(new UserDataChanged());
+        }
 
-        public void AddShell(int amount) => _shell = Mathf.Max(0, _shell + amount);
+        public void AddShell(int amount)
+        {
+            _shell = Mathf.Max(0, _shell + amount);
+            EventBus.Publish(new UserDataChanged());
+        }
 
         public bool TrySpendShell(int amount)
         {
             if (amount <= 0 || _shell < amount) return false;
             _shell -= amount;
+            EventBus.Publish(new UserDataChanged());
             return true;
         }
 
-        public void AddTicket(int amount) => _ticket = Mathf.Max(0, _ticket + amount);
+        public void AddTicket(int amount)
+        {
+            _ticket = Mathf.Max(0, _ticket + amount);
+            EventBus.Publish(new UserDataChanged());
+        }
 
         public bool TrySpendTicket(int amount)
         {
             if (amount <= 0 || _ticket < amount) return false;
             _ticket -= amount;
+            EventBus.Publish(new UserDataChanged());
             return true;
         }
 
-        public void SetScore(int score) => _score = score;
+        public void SetScore(int score)
+        {
+            _score = score;
+            EventBus.Publish(new UserDataChanged());
+        }
 
-        public void SetRank(int rank) => _rank = rank;
+        public void SetRank(int rank)
+        {
+            _rank = rank;
+            EventBus.Publish(new UserDataChanged());
+        }
 
         public void SetFriends(IEnumerable<int> cardIds)
         {
             _friends.Clear();
             _friends.AddRange(cardIds);
+            EventBus.Publish(new UserDataChanged());
         }
     }
 }
