@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 63b9cc7b77df0cf46a83f35c937f1f5d
+guid: a4b5d2c238033a044906c2c95d034469
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -135289596601886559
-    second: dice256_0
+      213: 5701066367733445811
+    second: battleBg1024x2048_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -48,11 +48,11 @@ TextureImporter:
   compressionQuality: 50
   spriteMode: 1
   spriteExtrude: 1
-  spriteMeshType: 1
+  spriteMeshType: 0
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 200
-  spriteBorder: {x: 25, y: 25, z: 25, w: 25}
+  spriteBorder: {x: 400, y: 0, z: 400, w: 0}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: dice256_0
+      name: battleBg1024x2048_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 0
-        width: 256
-        height: 256
+        y: 113
+        width: 1024
+        height: 1822
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 1a81db424da5f1ef0800000000000000
-      internalID: -135289596601886559
+      spriteID: 3b4bda9e7a14e1f40800000000000000
+      internalID: 5701066367733445811
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      dice256_0: -135289596601886559
+      battleBg1024x2048_0: 5701066367733445811
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
