@@ -23,6 +23,7 @@ namespace JungleDice.Core
         {
             EventBus.Subscribe<LogoSceneReady>(_ => ChangeState(GameState.Login));
             EventBus.Subscribe<LoginSceneReady>(_ => ChangeState(GameState.MainMenu));
+            EventBus.Subscribe<MainMenuPlayRequested>(_ => ChangeState(GameState.InGame));
             StartCoroutine(LogoSequence());
         }
 

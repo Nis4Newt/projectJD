@@ -20,6 +20,9 @@ namespace JungleDice.Core.Event
     public record LogoSceneReady();
     public record LoginSceneReady();
 
+    // MainMenu 씬 — 게임 시작 요청 (게임 타입은 발행 전 GameSession에 이미 기록됨)
+    public record MainMenuPlayRequested();
+
     // Login 씬 — task 진행률
     public record LoginProgressChanged(int Completed, int Total, string TaskName);
 
