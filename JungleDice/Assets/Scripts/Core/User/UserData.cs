@@ -14,6 +14,8 @@ namespace JungleDice.Core.User
         [SerializeField] private int _score;
         [SerializeField] private int _rank;
         [SerializeField] private List<int> _friends = new();
+        [SerializeField] private string _icon = "";
+        [SerializeField] private int _nextStage = 1;
 
         public string Name => _name;
         public int Shell => _shell;
@@ -21,6 +23,8 @@ namespace JungleDice.Core.User
         public int Score => _score;
         public int Rank => _rank;
         public IReadOnlyList<int> Friends => _friends;
+        public string Icon => _icon;
+        public int NextStage => _nextStage;
 
         public void SetName(string name)
         {
@@ -72,6 +76,18 @@ namespace JungleDice.Core.User
         {
             _friends.Clear();
             _friends.AddRange(cardIds);
+            EventBus.Publish(new UserDataChanged());
+        }
+
+        public void SetIcon(string icon)
+        {
+            _icon = icon;
+            EventBus.Publish(new UserDataChanged());
+        }
+
+        public void SetNextStage(int stage)
+        {
+            _nextStage = stage;
             EventBus.Publish(new UserDataChanged());
         }
     }
