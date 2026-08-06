@@ -8,12 +8,13 @@
 
 ## 배경
 
-이 시스템은 두 단계로 나뉜다 — 하나의 문서에 다 담기엔 "덱을 어떻게 만드는가"와 "턴을 어떻게 진행하는가"가 서로 다른 관심사이고, 실제로 이번 구현 단계에서는 두 부분이 아직 서로 연결되지도 않기 때문이다(덱은 생성 후 로그로만 확인, 턴은 실제 카드 소비 없이 스텁 로그만 남김).
+이 시스템은 세 단계로 나뉜다 — 하나의 문서에 다 담기엔 "덱을 어떻게 만드는가", "턴을 어떻게 진행하는가", "핸드/필드를 어떻게 다루는가"가 서로 다른 관심사이고, 실제로 각 구현 단계에서는 이전 단계가 스텁으로 남겨둔 부분을 다음 단계가 이어받는 구조이기 때문이다.
 
 1. [덱 구성 계획](plan-ingame-decksetup.md) — `UserData` 필드 확장(`icon`, `nextStage`) + 유저/컴퓨터 30매 덱 생성·셔플·로그 출력
 2. [턴 진행 계획](plan-ingame-turnsystem.md) — 유저/컴퓨터가 번갈아 진행하는 3단계 턴 상태 머신(친구카드 플레이 → 공격 주사위 → 타겟 주사위) + 액션 버튼 텍스트 전환
+3. [핸드/필드 배치 계획](plan-ingame-handfield.md) — `_userDeck`을 처음 실제로 소비해 핸드에 카드를 뽑아 오는 연출 + 핸드의 친구카드를 드래그해 유저 필드(4/5/6번)에 놓는 상호작용
 
-두 문서는 각각 독립적으로 구현·커밋 가능한 단위다. 실제로 덱과 턴을 연결하는 소비 로직(카드 뽑기, 합체 판정 등)은 두 문서 모두에서 범위 밖으로 명시하고, 이후 별도 문서에서 다룬다.
+세 문서는 각각 독립적으로 구현·커밋 가능한 단위다. 합체 판정(`CardCondition`/`CardTarget`)·공격/피격·승패 판정은 세 문서 모두에서 범위 밖으로 명시하고, 이후 별도 문서에서 다룬다.
 
 ---
 
@@ -21,6 +22,7 @@
 
 1. [plan-ingame-decksetup.md](plan-ingame-decksetup.md) — `UserData`에 `icon`/`nextStage` 추가, `InGameSceneManager`에서 유저/컴퓨터 덱 생성 및 로그 출력
 2. [plan-ingame-turnsystem.md](plan-ingame-turnsystem.md) — `InGameSceneManager`에 턴 상태 머신 추가, 액션 버튼 연결
+3. [plan-ingame-handfield.md](plan-ingame-handfield.md) — `FriendCard`/`FieldSlot` 컴포넌트 추가, 덱→핸드 드로우 연출과 핸드→필드 드래그 앤 드롭 구현
 
 ---
 
@@ -32,7 +34,6 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
         ▼
 [덱 구성]  UserData.Friends           → 유저 30매 셔플
            StageTable.GetFriends(UserData.NextStage) → 컴퓨터 30매 셔플
-           (Debug.Log로 확인, 실제 소비는 아직 없음)
         │
         ▼
 [턴 시작]  유저 선공, TurnPhase.PlayFriend
@@ -42,7 +43,8 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
    │ PlayFriend → RollAttacker →   │  유저: 버튼 클릭으로 진행
    │ RollTarget → (2초 대기)       │  컴퓨터: 매 단계 2초 대기로 진행
    └───────────────────────────────┘
-        │
+        │        (유저 PlayFriend 진입 시) 덱→핸드 드로우(최대 4장),
+        │        핸드 친구카드 드래그 → 필드(4/5/6번) 드롭
         ▼
    턴 교대 (User ↔ Computer), PlayFriend로 리셋 후 반복
 ```
@@ -51,15 +53,18 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 
 ## 이번 범위에서 제외
 
-- 실제 카드 소비(덱에서 뽑기)/합체 판정(`CardCondition`)/피격(HP 감소) — 턴 상태 머신은 이번엔 스텁 로그만 남김
+- 합체 판정(`CardCondition`)/공격·피격(HP 감소) — 필드에 `Friend`가 놓이는 것까지만 다룸
 - 승패 판정, `GameState.GameOver` 전이 — 턴은 종료 조건 없이 반복됨
+- 컴퓨터 측 핸드 연출/필드(1/2/3번), `_computerDeck` 소비 — 컴퓨터의 `PlayFriend`는 로그만 남기는 스텁 그대로
 - `GameType.Battle`(대전) 모드의 InGame 로직 — 이 문서는 Solo 전용
 
 ---
 
 ## 구현 후 체크리스트
 
-- [ ] [plan-ingame-decksetup.md](plan-ingame-decksetup.md) 구현
-- [ ] [plan-ingame-turnsystem.md](plan-ingame-turnsystem.md) 구현
-- [ ] (추후) 덱 소비/합체/피격/승패 판정을 다루는 후속 계획 문서 작성
+- [x] [plan-ingame-decksetup.md](plan-ingame-decksetup.md) 구현
+- [x] [plan-ingame-turnsystem.md](plan-ingame-turnsystem.md) 구현
+- [ ] [plan-ingame-handfield.md](plan-ingame-handfield.md) 구현
+- [ ] (추후) 컴퓨터 핸드/필드(1/2/3번) 별도 계획 문서
+- [ ] (추후) 합체/공격·피격/승패 판정을 다루는 후속 계획 문서
 - [ ] (추후) `GameType.Battle` 모드의 InGame 로직 별도 계획 문서
