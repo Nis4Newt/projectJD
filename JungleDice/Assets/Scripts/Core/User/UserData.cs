@@ -13,7 +13,7 @@ namespace JungleDice.Core.User
         [SerializeField] private int _ticket;
         [SerializeField] private int _score;
         [SerializeField] private int _rank;
-        [SerializeField] private List<int> _friends = new();
+        [SerializeField] private List<int> _friends = new() { 1000, 1001, 1002 };
         [SerializeField] private string _icon = "";
         [SerializeField] private int _nextStage = 1;
 
