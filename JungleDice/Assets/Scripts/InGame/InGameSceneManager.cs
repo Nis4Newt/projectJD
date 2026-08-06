@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using DG.Tweening;
 using JungleDice.Core;
 using JungleDice.Core.Event;
 using JungleDice.Core.User;
@@ -37,6 +38,16 @@ namespace JungleDice.InGame
         [SerializeField] private float _drawDuration = 0.3f;
         [SerializeField] private float _compactDuration = 0.25f;
 
+        [SerializeField] private FieldSlot[] _fieldSlots; // 필드 6칸, 배열 인덱스 0~5 = 절대 번호 1~6 (1/2/3 컴퓨터, 4/5/6 유저)
+        [SerializeField] private BaseStone _userBase;
+        [SerializeField] private BaseStone _computerBase;
+        [SerializeField] private float _selectPunchScale = 0.05f;
+        [SerializeField] private float _selectPunchDuration = 0.2f;
+        [SerializeField] private float _attackerPunchScale = 0.15f;
+        [SerializeField] private float _attackerPunchDuration = 1f;
+        [SerializeField] private float _moveToTargetDuration = 0.3f;
+        [SerializeField] private float _moveBackDuration = 0.3f;
+
         private readonly CompositeDisposable _subs = new();
 
         private List<int> _userDeck;
@@ -44,6 +55,7 @@ namespace JungleDice.InGame
 
         private TurnOwner _currentOwner;
         private TurnPhase _currentPhase;
+        private FieldSlot _attackerSlot; // 이번 턴에 뽑힌 공격자 슬롯, 비어있으면 null
 
         protected override void OnAwake()
         {
@@ -102,17 +114,42 @@ namespace JungleDice.InGame
                     break;
 
                 case TurnPhase.RollAttacker:
-                    Debug.Log($"[InGame] {_currentOwner} 턴 - 공격 주사위: {Random.Range(1, 7)}");
+                {
+                    int attackerRoll = Random.Range(1, 7);
+                    Debug.Log($"[InGame] {_currentOwner} 턴 - 공격 주사위: {attackerRoll}");
+
+                    var attackerSlot = GetFieldSlot(attackerRoll);
+                    _attackerSlot = attackerSlot.IsOccupied ? attackerSlot : null;
+
+                    if (_attackerSlot == null)
+                    {
+                        // 공격자가 없으면 RollTarget으로 넘어가지 않고 곧바로 턴 종료
+                        Debug.Log($"[InGame] {_currentOwner} 턴 - 공격자 없음, 턴 종료");
+                        _actionButtonText.text = "상대 턴";
+                        _actionButton.interactable = false;
+                        StartCoroutine(SwitchTurnAfterDelay());
+                        return; // 아래의 컴퓨터 자동 진행도 걸지 않음 — 이미 턴 종료 코루틴을 시작함
+                    }
+
+                    var attacker = _attackerSlot.GetComponentInChildren<Friend>();
+                    attacker.SetHighlight(true, Color.red);
+                    attacker.PunchScale(_selectPunchScale, _selectPunchDuration);
+
                     _actionButtonText.text = "roll target";
                     _actionButton.interactable = _currentOwner == TurnOwner.User;
                     break;
+                }
 
                 case TurnPhase.RollTarget:
-                    Debug.Log($"[InGame] {_currentOwner} 턴 - 타겟 주사위: {Random.Range(1, 7)}");
+                {
+                    int targetRoll = Random.Range(1, 7);
+                    Debug.Log($"[InGame] {_currentOwner} 턴 - 타겟 주사위: {targetRoll}");
+
                     _actionButtonText.text = "상대 턴";
                     _actionButton.interactable = false;
-                    StartCoroutine(SwitchTurnAfterDelay());
+                    StartCoroutine(ResolveAttackRoutine(GetFieldSlot(targetRoll)));
                     break;
+                }
             }
 
             if (_currentOwner == TurnOwner.Computer && phase != TurnPhase.RollTarget)
@@ -151,6 +188,59 @@ namespace JungleDice.InGame
 
             _currentOwner = _currentOwner == TurnOwner.User ? TurnOwner.Computer : TurnOwner.User;
             EnterPhase(TurnPhase.PlayFriend);
+        }
+
+        private FieldSlot GetFieldSlot(int rollValue) => _fieldSlots[rollValue - 1];
+
+        private BaseStone GetBase(int slotIndex) => slotIndex <= 3 ? _computerBase : _userBase;
+
+        // RollAttacker에서 공격자가 없으면 이 코루틴 자체가 시작되지 않으므로, _attackerSlot은 항상 점유된 슬롯이다.
+        private IEnumerator ResolveAttackRoutine(FieldSlot targetSlot)
+        {
+            var attacker = _attackerSlot.GetComponentInChildren<Friend>();
+            var targetFriend = targetSlot.IsOccupied ? targetSlot.GetComponentInChildren<Friend>() : null;
+
+            if (targetFriend != null)
+            {
+                targetFriend.SetHighlight(true, Color.blue);
+                targetFriend.PunchScale(_selectPunchScale, _selectPunchDuration);
+                yield return new WaitForSeconds(_selectPunchDuration);
+            }
+
+            attacker.PunchScale(_attackerPunchScale, _attackerPunchDuration);
+            yield return new WaitForSeconds(_attackerPunchDuration);
+
+            Vector3 originalPosition = attacker.transform.position;
+            Vector3 targetPosition = targetFriend != null
+                ? targetFriend.transform.position
+                : GetBase(targetSlot.Index).transform.position;
+
+            attacker.MoveTo(targetPosition, _moveToTargetDuration, Ease.InQuad); // 서서히 → 빠르게
+            yield return new WaitForSeconds(_moveToTargetDuration);
+
+            // 타격음, 타격 이펙트 재생 지점
+
+            if (targetFriend == null)
+            {
+                int damage = CardTable.Instance.GetAtt(attacker.Key);
+                GetBase(targetSlot.Index).TakeDamage(damage);
+            }
+            // targetFriend != null인 경우 카드 대 카드 피해 판정은 범위 밖 — 연출만 재생
+
+            attacker.MoveTo(originalPosition, _moveBackDuration, Ease.Linear); // 등속 복귀
+            yield return new WaitForSeconds(_moveBackDuration);
+
+            attacker.SetHighlight(false, Color.clear);
+            if (targetFriend != null) targetFriend.SetHighlight(false, Color.clear);
+
+            if (targetFriend == null && GetBase(targetSlot.Index).CurrentHp <= 0)
+            {
+                Debug.Log($"[InGame] {(targetSlot.Index <= 3 ? "Computer" : "User")} 본체 파괴 — 패배");
+                GameManager.Instance.ChangeState(GameState.GameOver);
+                yield break; // 턴 교대 없이 종료
+            }
+
+            yield return SwitchTurnAfterDelay();
         }
 
         private void DrawHandCards()
