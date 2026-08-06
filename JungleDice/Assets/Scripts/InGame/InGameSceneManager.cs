@@ -28,6 +28,15 @@ namespace JungleDice.InGame
         [SerializeField] private Button _actionButton;
         [SerializeField] private TextMeshProUGUI _actionButtonText;
 
+        [SerializeField] private FriendCard _friendCardPrefab;
+        [SerializeField] private Friend _friendPrefab;
+        [SerializeField] private Transform _deckOrigin;
+        [SerializeField] private HandSlot[] _handSlots; // hand의 고정 슬롯 4개, 인덱스 0~3(왼쪽→오른쪽)
+        [SerializeField] private Transform _dragLayer;
+        [SerializeField] private float _drawInterval = 0.15f;
+        [SerializeField] private float _drawDuration = 0.3f;
+        [SerializeField] private float _compactDuration = 0.25f;
+
         private readonly CompositeDisposable _subs = new();
 
         private List<int> _userDeck;
@@ -87,6 +96,7 @@ namespace JungleDice.InGame
             {
                 case TurnPhase.PlayFriend:
                     Debug.Log($"[InGame] {_currentOwner} 턴 - 친구카드 플레이");
+                    if (_currentOwner == TurnOwner.User) DrawHandCards();
                     _actionButtonText.text = "roll attacker";
                     _actionButton.interactable = _currentOwner == TurnOwner.User;
                     break;
@@ -116,6 +126,7 @@ namespace JungleDice.InGame
             switch (_currentPhase)
             {
                 case TurnPhase.PlayFriend:
+                    CompactHand(); // hand를 앞으로 당겨 정리한 뒤 다음 단계로
                     EnterPhase(TurnPhase.RollAttacker);
                     break;
                 case TurnPhase.RollAttacker:
@@ -140,6 +151,73 @@ namespace JungleDice.InGame
 
             _currentOwner = _currentOwner == TurnOwner.User ? TurnOwner.Computer : TurnOwner.User;
             EnterPhase(TurnPhase.PlayFriend);
+        }
+
+        private void DrawHandCards()
+        {
+            var emptySlots = new List<HandSlot>();
+            foreach (var slot in _handSlots)
+                if (!slot.IsOccupied) emptySlots.Add(slot);
+
+            int needed = Mathf.Min(emptySlots.Count, _userDeck.Count);
+            if (needed <= 0) return;
+
+            StartCoroutine(DrawHandCardsRoutine(emptySlots, needed));
+        }
+
+        private IEnumerator DrawHandCardsRoutine(List<HandSlot> emptySlots, int count)
+        {
+            for (int i = 0; i < count; i++)
+            {
+                int key = _userDeck[0];
+                _userDeck.RemoveAt(0); // 이미 셔플된 순서 그대로 앞에서부터 소비
+
+                SpawnFriendCard(key, emptySlots[i]);
+
+                yield return new WaitForSeconds(_drawInterval);
+            }
+        }
+
+        private void SpawnFriendCard(int key, HandSlot slot)
+        {
+            var card = Instantiate(_friendCardPrefab, _dragLayer);
+            card.transform.position = _deckOrigin.position; // 덱 오브젝트의 위치에서 생성
+            card.SetKey(key);
+            card.Initialize(_dragLayer);
+
+            card.MoveToSlot(slot, _drawDuration); // 빈 슬롯 위치로 이동 후 도착하면 그 슬롯의 자식으로
+        }
+
+        // 유저가 "roll attacker"를 눌러 PlayFriend를 끝낼 때, hand의 빈 슬롯(드래그로 필드에 낸 카드 자리)을 앞으로 당겨 채운다.
+        private void CompactHand()
+        {
+            var cards = new List<FriendCard>();
+            foreach (var slot in _handSlots)
+            {
+                if (slot.IsOccupied)
+                    cards.Add(slot.GetComponentInChildren<FriendCard>());
+            }
+
+            for (int i = 0; i < cards.Count; i++)
+            {
+                var targetSlot = _handSlots[i];
+                var card = cards[i];
+
+                if (card.HomeSlot == targetSlot) continue; // 이미 제자리
+
+                card.MoveToSlot(targetSlot, _compactDuration);
+            }
+        }
+
+        public void TryPlaceFriendCard(FieldSlot slot, FriendCard card)
+        {
+            if (slot.IsOccupied) return; // 이미 친구카드가 있다면 놓을 수 없음
+
+            var friend = Instantiate(_friendPrefab, slot.transform);
+            friend.SetKey(card.Key);
+
+            card.NotifyPlaced();
+            Destroy(card.gameObject);
         }
 
         protected override void OnDestroy()
