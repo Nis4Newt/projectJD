@@ -15,6 +15,9 @@ namespace JungleDice.InGame
         [SerializeField] private Image _highlightImage; // 카드 전체를 덮는 하이라이트 오버레이, 기본 비활성화
 
         public int Key { get; private set; }
+        public int Att { get; private set; }
+        public int CurrentHp { get; private set; }
+        public bool IsDead => CurrentHp <= 0;
 
         public void SetKey(int key)
         {
@@ -23,9 +26,37 @@ namespace JungleDice.InGame
             var data = CardTable.Instance?.Get(key);
             if (data == null) return; // CardTable.Get이 이미 LogError를 남김
 
+            Att = data.att;
+            CurrentHp = data.hp;
+
             _cardImage.sprite = SpriteManager.GetCard(key.ToString());
-            _attText.text = data.att.ToString();
-            _hpText.text = data.hp.ToString();
+            _attText.text = Att.ToString();
+            _attText.color = Color.white;
+            _hpText.text = CurrentHp.ToString();
+            _hpText.color = Color.white;
+        }
+
+        public void TakeDamage(int amount)
+        {
+            int previousHp = CurrentHp;
+            CurrentHp = Mathf.Max(0, CurrentHp - amount);
+            _hpText.text = CurrentHp.ToString();
+            _hpText.color = GetStatColor(CurrentHp, previousHp);
+        }
+
+        public void DoubleAtt()
+        {
+            int previousAtt = Att;
+            Att *= 2;
+            _attText.text = Att.ToString();
+            _attText.color = GetStatColor(Att, previousAtt);
+        }
+
+        // 직전 값 대비로 판정 — 오르면 초록, 떨어지면 빨강, 변화 없으면 흰색(최초값 같은 고정 기준값과 비교하지 않음)
+        private static Color GetStatColor(int current, int previous)
+        {
+            if (current == previous) return Color.white;
+            return current > previous ? Color.green : Color.red;
         }
 
         public void SetHighlight(bool on, Color color)
@@ -46,5 +77,7 @@ namespace JungleDice.InGame
             transform.DOKill();
             transform.DOMove(worldPosition, duration).SetEase(ease);
         }
+
+        public void SetParent(Transform parent) => transform.SetParent(parent, worldPositionStays: true);
     }
 }

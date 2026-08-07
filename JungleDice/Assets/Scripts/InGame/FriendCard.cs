@@ -61,6 +61,12 @@ namespace JungleDice.InGame
 
         public void OnBeginDrag(PointerEventData eventData)
         {
+            if (!InGameSceneManager.Instance.CanPlayFriend)
+            {
+                eventData.pointerDrag = null; // 드래그 자체를 취소 — 이후 OnDrag/OnEndDrag가 이 오브젝트에 호출되지 않음
+                return;
+            }
+
             _canvasGroup.blocksRaycasts = false; // 이 카드 자신이 아래 FieldSlot의 레이캐스트를 가로막지 않도록
 
             transform.SetParent(_dragLayer, worldPositionStays: true); // 자기 슬롯 밖으로 — 즉시 hand에서 빠짐(슬롯은 빈 채로 남음, 다른 카드가 채우지 않음)

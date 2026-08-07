@@ -39,6 +39,7 @@ namespace JungleDice.InGame
         [SerializeField] private float _compactDuration = 0.25f;
 
         [SerializeField] private FieldSlot[] _fieldSlots; // 필드 6칸, 배열 인덱스 0~5 = 절대 번호 1~6 (1/2/3 컴퓨터, 4/5/6 유저)
+        [SerializeField] private Transform _attackLayer; // 공격 연출 도중 attacker가 다른 슬롯/카드 위로 그려지도록 임시로 옮겨가는 레이어(_dragLayer와 같은 역할)
         [SerializeField] private BaseStone _userBase;
         [SerializeField] private BaseStone _computerBase;
         [SerializeField] private float _selectPunchScale = 0.05f;
@@ -56,6 +57,8 @@ namespace JungleDice.InGame
         private TurnOwner _currentOwner;
         private TurnPhase _currentPhase;
         private FieldSlot _attackerSlot; // 이번 턴에 뽑힌 공격자 슬롯, 비어있으면 null
+
+        public bool CanPlayFriend => _currentOwner == TurnOwner.User && _currentPhase == TurnPhase.PlayFriend;
 
         protected override void OnAwake()
         {
@@ -215,23 +218,56 @@ namespace JungleDice.InGame
                 ? targetFriend.transform.position
                 : GetBase(targetSlot.Index).transform.position;
 
+            attacker.SetParent(_attackLayer); // 공격 연출 도중 다른 슬롯/카드 위로 그려지도록 임시로 옮김
             attacker.MoveTo(targetPosition, _moveToTargetDuration, Ease.InQuad); // 서서히 → 빠르게
             yield return new WaitForSeconds(_moveToTargetDuration);
 
             // 타격음, 타격 이펙트 재생 지점
 
-            if (targetFriend == null)
-            {
-                int damage = CardTable.Instance.GetAtt(attacker.Key);
-                GetBase(targetSlot.Index).TakeDamage(damage);
-            }
-            // targetFriend != null인 경우 카드 대 카드 피해 판정은 범위 밖 — 연출만 재생
+            bool attackerDied = false;
+            bool targetDied = false;
 
+            if (targetFriend != null)
+            {
+                if (targetFriend == attacker)
+                {
+                    // 공격 주사위/타겟 주사위가 같은 슬롯을 가리켜 attacker와 target이 동일한 카드인 경우 — 서로 공격하는 대신 공격력이 2배로 오르는 어드밴티지
+                    attacker.DoubleAtt();
+                }
+                else
+                {
+                    // 친구카드끼리는 무조건 쌍방 피해 — attacker는 target의 공격력만큼, target은 attacker의 공격력만큼
+                    targetFriend.TakeDamage(attacker.Att);
+                    attacker.TakeDamage(targetFriend.Att);
+                }
+
+                targetDied = targetFriend.IsDead;
+                attackerDied = attacker.IsDead;
+            }
+            else
+            {
+                GetBase(targetSlot.Index).TakeDamage(attacker.Att); // base의 공격력은 0으로 고정 — 되돌아오는 피해 없음
+            }
+
+            // 죽더라도 공격자가 제자리로 돌아오는 연출까지는 재생 — 그 뒤에 죽은 쪽을 한번에 제거
             attacker.MoveTo(originalPosition, _moveBackDuration, Ease.Linear); // 등속 복귀
             yield return new WaitForSeconds(_moveBackDuration);
 
-            attacker.SetHighlight(false, Color.clear);
-            if (targetFriend != null) targetFriend.SetHighlight(false, Color.clear);
+            if (attackerDied)
+            {
+                Destroy(attacker.gameObject);
+            }
+            else
+            {
+                attacker.SetParent(_attackerSlot.transform); // 공격 레이어에서 원래 슬롯으로 복귀
+                attacker.SetHighlight(false, Color.clear);
+            }
+
+            if (targetFriend != null)
+            {
+                if (targetDied) Destroy(targetFriend.gameObject);
+                else targetFriend.SetHighlight(false, Color.clear);
+            }
 
             if (targetFriend == null && GetBase(targetSlot.Index).CurrentHp <= 0)
             {
