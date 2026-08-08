@@ -1,0 +1,988 @@
+fileFormatVersion: 2
+guid: d50fc8dfd579a1f489b271a82f900065
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1238657350751230157
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_0
+  - first:
+      213: 1430140602200081170
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_1
+  - first:
+      213: 8926837521226400414
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_2
+  - first:
+      213: -1920603638252679423
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_3
+  - first:
+      213: -1116473126762587584
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_4
+  - first:
+      213: 7441064804428813622
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_5
+  - first:
+      213: -3153788475071368289
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_6
+  - first:
+      213: -3558636588004191903
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_7
+  - first:
+      213: 4052060945813256832
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_8
+  - first:
+      213: -7745079485618247639
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_9
+  - first:
+      213: -7129485078363959649
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_10
+  - first:
+      213: 3161722813474542793
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_11
+  - first:
+      213: 5874480974251145851
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_12
+  - first:
+      213: 8635229936340197073
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_13
+  - first:
+      213: -830987056126765639
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_14
+  - first:
+      213: -2759932209507243098
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_15
+  - first:
+      213: 1064633850775614789
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_16
+  - first:
+      213: 760779612408320897
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_17
+  - first:
+      213: 6310177325785998549
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_18
+  - first:
+      213: 3703925900498468830
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_19
+  - first:
+      213: -7697543063171986483
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_20
+  - first:
+      213: 2004857064097576891
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_21
+  - first:
+      213: -3090940409894923625
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_22
+  - first:
+      213: 3107569875662244413
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_23
+  - first:
+      213: -2255586142150601584
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_24
+  - first:
+      213: 6560262283727213461
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_25
+  - first:
+      213: 3964400777197338938
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_26
+  - first:
+      213: 8555544710994391181
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_27
+  - first:
+      213: 6141233928378300101
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_28
+  - first:
+      213: 7756909352928305297
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_29
+  - first:
+      213: -3084476155191590000
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_30
+  - first:
+      213: -6959371171479753925
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_31
+  - first:
+      213: 1439448217575697884
+    second: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_32
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_0
+      rect:
+        serializedVersion: 2
+        x: 574
+        y: 814
+        width: 143
+        height: 106
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dc814fd3c48903110800000000000000
+      internalID: 1238657350751230157
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_1
+      rect:
+        serializedVersion: 2
+        x: 756
+        y: 824
+        width: 69
+        height: 71
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 213cffcec41e8d310800000000000000
+      internalID: 1430140602200081170
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_2
+      rect:
+        serializedVersion: 2
+        x: 1046
+        y: 851
+        width: 137
+        height: 109
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e92045cdd6f72eb70800000000000000
+      internalID: 8926837521226400414
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_3
+      rect:
+        serializedVersion: 2
+        x: 1179
+        y: 870
+        width: 36
+        height: 85
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 10f40a3ba25a855e0800000000000000
+      internalID: -1920603638252679423
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_4
+      rect:
+        serializedVersion: 2
+        x: 1297
+        y: 847
+        width: 58
+        height: 68
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 04adb064b9d7180f0800000000000000
+      internalID: -1116473126762587584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_5
+      rect:
+        serializedVersion: 2
+        x: 1553
+        y: 874
+        width: 107
+        height: 91
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 63514a2e309f34760800000000000000
+      internalID: 7441064804428813622
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_6
+      rect:
+        serializedVersion: 2
+        x: 1686
+        y: 889
+        width: 32
+        height: 76
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9376a6671e7b34d0800000000000000
+      internalID: -3153788475071368289
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_7
+      rect:
+        serializedVersion: 2
+        x: 1792
+        y: 867
+        width: 11
+        height: 26
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1615d4fa0ee2d9ec0800000000000000
+      internalID: -3558636588004191903
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_8
+      rect:
+        serializedVersion: 2
+        x: 1816
+        y: 860
+        width: 53
+        height: 59
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 08abe6326ffcb3830800000000000000
+      internalID: 4052060945813256832
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_9
+      rect:
+        serializedVersion: 2
+        x: 1275
+        y: 851
+        width: 14
+        height: 37
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9282f863e33f38490800000000000000
+      internalID: -7745079485618247639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_10
+      rect:
+        serializedVersion: 2
+        x: 1662
+        y: 864
+        width: 12
+        height: 10
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f9e0ba8481bfe0d90800000000000000
+      internalID: -7129485078363959649
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_11
+      rect:
+        serializedVersion: 2
+        x: 143
+        y: 690
+        width: 160
+        height: 159
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9c41667b522b0eb20800000000000000
+      internalID: 3161722813474542793
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_12
+      rect:
+        serializedVersion: 2
+        x: 794
+        y: 711
+        width: 172
+        height: 107
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b7ab70e5259568150800000000000000
+      internalID: 5874480974251145851
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_13
+      rect:
+        serializedVersion: 2
+        x: 1320
+        y: 784
+        width: 146
+        height: 41
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1de506d20ef76d770800000000000000
+      internalID: 8635229936340197073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_14
+      rect:
+        serializedVersion: 2
+        x: 1872
+        y: 796
+        width: 122
+        height: 32
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9b5dd9adcadb774f0800000000000000
+      internalID: -830987056126765639
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_15
+      rect:
+        serializedVersion: 2
+        x: 599
+        y: 769
+        width: 76
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6ab69283740c2b9d0800000000000000
+      internalID: -2759932209507243098
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_16
+      rect:
+        serializedVersion: 2
+        x: 1091
+        y: 775
+        width: 72
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 545365bb8d656ce00800000000000000
+      internalID: 1064633850775614789
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_17
+      rect:
+        serializedVersion: 2
+        x: 1348
+        y: 754
+        width: 164
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 18315f5d605de8a00800000000000000
+      internalID: 760779612408320897
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_18
+      rect:
+        serializedVersion: 2
+        x: 1895
+        y: 755
+        width: 136
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5d4e23558d0429750800000000000000
+      internalID: 6310177325785998549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_19
+      rect:
+        serializedVersion: 2
+        x: 606
+        y: 640
+        width: 104
+        height: 89
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: edf74957bfcf66330800000000000000
+      internalID: 3703925900498468830
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_20
+      rect:
+        serializedVersion: 2
+        x: 744
+        y: 627
+        width: 31
+        height: 87
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: dcb8c5c0e55dc2590800000000000000
+      internalID: -7697543063171986483
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_21
+      rect:
+        serializedVersion: 2
+        x: 1330
+        y: 702
+        width: 52
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bb7f7faa0eea2db10800000000000000
+      internalID: 2004857064097576891
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_22
+      rect:
+        serializedVersion: 2
+        x: 1066
+        y: 598
+        width: 123
+        height: 95
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 792105ed216ca15d0800000000000000
+      internalID: -3090940409894923625
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_23
+      rect:
+        serializedVersion: 2
+        x: 1185
+        y: 570
+        width: 23
+        height: 113
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d3a8d89565e402b20800000000000000
+      internalID: 3107569875662244413
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_24
+      rect:
+        serializedVersion: 2
+        x: 1260
+        y: 606
+        width: 13
+        height: 74
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 094d1d4ba5c82b0e0800000000000000
+      internalID: -2255586142150601584
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_25
+      rect:
+        serializedVersion: 2
+        x: 18
+        y: 402
+        width: 56
+        height: 50
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 59314fe0acbba0b50800000000000000
+      internalID: 6560262283727213461
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_26
+      rect:
+        serializedVersion: 2
+        x: 158
+        y: 418
+        width: 8
+        height: 16
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a314128a081640730800000000000000
+      internalID: 3964400777197338938
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_27
+      rect:
+        serializedVersion: 2
+        x: 80
+        y: 388
+        width: 15
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d80faced5966bb670800000000000000
+      internalID: 8555544710994391181
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_28
+      rect:
+        serializedVersion: 2
+        x: 301
+        y: 372
+        width: 33
+        height: 35
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 5c6b09f58bb0a3550800000000000000
+      internalID: 6141233928378300101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_29
+      rect:
+        serializedVersion: 2
+        x: 369
+        y: 290
+        width: 32
+        height: 13
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 190623865f316ab60800000000000000
+      internalID: 7756909352928305297
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_30
+      rect:
+        serializedVersion: 2
+        x: 411
+        y: 301
+        width: 44
+        height: 15
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09384a3774db135d0800000000000000
+      internalID: -3084476155191590000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_31
+      rect:
+        serializedVersion: 2
+        x: 396
+        y: 246
+        width: 34
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b3bead7bac85b6f90800000000000000
+      internalID: -6959371171479753925
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_32
+      rect:
+        serializedVersion: 2
+        x: 439
+        y: 243
+        width: 56
+        height: 9
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: cdd2b210782f9f310800000000000000
+      internalID: 1439448217575697884
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_0: 1238657350751230157
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_1: 1430140602200081170
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_10: -7129485078363959649
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_11: 3161722813474542793
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_12: 5874480974251145851
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_13: 8635229936340197073
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_14: -830987056126765639
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_15: -2759932209507243098
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_16: 1064633850775614789
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_17: 760779612408320897
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_18: 6310177325785998549
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_19: 3703925900498468830
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_2: 8926837521226400414
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_20: -7697543063171986483
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_21: 2004857064097576891
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_22: -3090940409894923625
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_23: 3107569875662244413
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_24: -2255586142150601584
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_25: 6560262283727213461
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_26: 3964400777197338938
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_27: 8555544710994391181
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_28: 6141233928378300101
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_29: 7756909352928305297
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_3: -1920603638252679423
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_30: -3084476155191590000
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_31: -6959371171479753925
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_32: 1439448217575697884
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_4: -1116473126762587584
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_5: 7441064804428813622
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_6: -3153788475071368289
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_7: -3558636588004191903
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_8: 4052060945813256832
+      Explosion 52 Default Sprite Sheet 512x512 (4x2) 1_9: -7745079485618247639
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

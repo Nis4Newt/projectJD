@@ -5,11 +5,13 @@ namespace JungleDice.Core.Sprites
     public enum SpriteCategory
     {
         Card,
+        Icon,
     }
 
     public static class SpriteManager
     {
         public static Sprite GetCard(string name) => Load(SpriteCategory.Card, name);
+        public static Sprite GetIcon(string name) => Load(SpriteCategory.Icon, name);
 
         private static Sprite Load(SpriteCategory category, string name)
         {
