@@ -49,6 +49,8 @@ namespace JungleDice.InGame
         [SerializeField] private float _moveToTargetDuration = 0.3f;
         [SerializeField] private float _moveBackDuration = 0.3f;
 
+        [SerializeField] private ResultPanel _resultPanel;
+
         private readonly CompositeDisposable _subs = new();
 
         private List<int> _userDeck;
@@ -57,6 +59,7 @@ namespace JungleDice.InGame
         private TurnOwner _currentOwner;
         private TurnPhase _currentPhase;
         private FieldSlot _attackerSlot; // 이번 턴에 뽑힌 공격자 슬롯, 비어있으면 null
+        private bool _userWon; // GameOver 직전에 세팅, OnGameStateChanged(GameOver)에서 읽음
 
         public bool CanPlayFriend => _currentOwner == TurnOwner.User && _currentPhase == TurnPhase.PlayFriend;
 
@@ -83,6 +86,10 @@ namespace JungleDice.InGame
             else if (e.Previous == GameState.Pause && e.Next == GameState.InGame)
             {
                 // HidePauseOverlay();
+            }
+            else if (e.Next == GameState.GameOver)
+            {
+                _resultPanel.ShowResult(_userWon);
             }
         }
 
@@ -111,7 +118,11 @@ namespace JungleDice.InGame
             {
                 case TurnPhase.PlayFriend:
                     Debug.Log($"[InGame] {_currentOwner} 턴 - 친구카드 플레이");
-                    if (_currentOwner == TurnOwner.User) DrawHandCards();
+                    if (_currentOwner == TurnOwner.User)
+                    {
+                        DrawHandCards();
+                        _resultPanel.PlayMyTurnAlert();
+                    }
                     _actionButtonText.text = "roll attacker";
                     _actionButton.interactable = _currentOwner == TurnOwner.User;
                     break;
@@ -271,7 +282,8 @@ namespace JungleDice.InGame
 
             if (targetFriend == null && GetBase(targetSlot.Index).CurrentHp <= 0)
             {
-                Debug.Log($"[InGame] {(targetSlot.Index <= 3 ? "Computer" : "User")} 본체 파괴 — 패배");
+                _userWon = targetSlot.Index <= 3; // 컴퓨터(1~3) 본체가 파괴되면 유저 승리
+                Debug.Log($"[InGame] {(targetSlot.Index <= 3 ? "Computer" : "User")} 본체 파괴 — {(_userWon ? "승리" : "패배")}");
                 GameManager.Instance.ChangeState(GameState.GameOver);
                 yield break; // 턴 교대 없이 종료
             }
