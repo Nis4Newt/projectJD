@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 172204024}
   - component: {fileID: 172204023}
   - component: {fileID: 172204025}
+  - component: {fileID: 172204026}
   m_Layer: 0
   m_Name: GameManagers
   m_TagString: Untagged
@@ -176,6 +177,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d074d010c7a3064490d298bf66e3691, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::JungleDice.Core.Scene.SceneLoader
+--- !u!114 &172204026
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 172204022}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9812e94ab6ddfea458d70a20efc60d3b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::JungleDice.Core.Audio.AudioSystem
+  _mixer: {fileID: 24100000, guid: 1a69b527ec81acc4196eeac58bd703f3, type: 2}
+  _bgmMixerGroup: {fileID: -4384908782035915758, guid: 1a69b527ec81acc4196eeac58bd703f3, type: 2}
+  _sfxMixerGroup: {fileID: -1336050134684116586, guid: 1a69b527ec81acc4196eeac58bd703f3, type: 2}
+  _sfxPoolSize: 8
+  _defaultBgmFadeDuration: 1
 --- !u!1 &245913737
 GameObject:
   m_ObjectHideFlags: 0
