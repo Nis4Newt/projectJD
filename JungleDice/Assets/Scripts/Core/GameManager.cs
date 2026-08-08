@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using JungleDice.Core.Event;
+using JungleDice.Core.Settings;
 
 namespace JungleDice.Core
 {
@@ -32,8 +33,8 @@ namespace JungleDice.Core
             // 코어 시스템이 Awake 완료될 때까지 1프레임 대기
             yield return null;
 
-            // SaveSystem에서 설정 로드
-            // (SaveSystem 구현 후 연결)
+            // 저장된 설정을 불러와 AudioSystem에 반영
+            SettingsSystem.Instance.ApplyLoadedVolumes();
 
             // 초기화 완료 → Logo 상태 진입
             // Logo → Login 전이는 LogoSceneManager의 LogoSceneReady 수신 시 처리

@@ -31,4 +31,7 @@ namespace JungleDice.Core.Event
 
     // User 시스템 — 유저 데이터 변경 알림 (plan-mainmenuscene-userdata-hud.md)
     public record UserDataChanged();
+
+    // 설정 시스템 — 볼륨/진동/언어 변경 알림 (plan-settingssystem.md)
+    public record SettingsChanged();
 }
