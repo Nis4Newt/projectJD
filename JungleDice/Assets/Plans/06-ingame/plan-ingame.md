@@ -14,8 +14,9 @@
 2. [턴 진행 계획](plan-ingame-turnsystem.md) — 유저/컴퓨터가 번갈아 진행하는 3단계 턴 상태 머신(친구카드 플레이 → 공격 주사위 → 타겟 주사위) + 액션 버튼 텍스트 전환
 3. [핸드/필드 배치 계획](plan-ingame-handfield.md) — `_userDeck`을 처음 실제로 소비해 핸드에 카드를 뽑아 오는 연출 + 핸드의 친구카드를 드래그해 유저 필드(4/5/6번)에 놓는 상호작용
 4. [공격 판정 계획](plan-ingame-attack.md) — `RollAttacker`/`RollTarget` 주사위 값으로 필드 6칸 중 공격자/타겟을 선택해 하이라이트·공격 연출을 재생하고, 타겟 슬롯이 비어있으면 본체(기본 체력 30)를 공격해 0이 되면 `GameState.GameOver`로 전이
+5. [결과 화면·내 턴 알림 계획](plan-ingame-result.md) — 유저 진영 상태 위젯(아이콘/승패 프레임/뒤로가기)과 내 턴 알림 연출, `GameState.GameOver` 전이 이후 방치되던 화면을 메인메뉴 복귀까지 연결
 
-네 문서는 각각 독립적으로 구현·커밋 가능한 단위다. 합체 판정(`CardCondition`/`CardTarget`)·카드 대 카드 공격/피격·컴퓨터 측 실제 핸드/필드 배치는 네 문서 모두에서 범위 밖으로 명시하고, 이후 별도 문서에서 다룬다(본체 공격/승패 판정은 4단계에서 다룸).
+다섯 문서는 각각 독립적으로 구현·커밋 가능한 단위다. 합체 판정(`CardCondition`/`CardTarget`)·카드 대 카드 공격/피격·컴퓨터 측 실제 핸드/필드 배치·컴퓨터 진영 결과 위젯은 다섯 문서 모두에서 범위 밖으로 명시하고, 이후 별도 문서에서 다룬다(본체 공격/승패 판정은 4단계, 승패 화면은 5단계에서 다룸).
 
 ---
 
@@ -25,6 +26,7 @@
 2. [plan-ingame-turnsystem.md](plan-ingame-turnsystem.md) — `InGameSceneManager`에 턴 상태 머신 추가, 액션 버튼 연결
 3. [plan-ingame-handfield.md](plan-ingame-handfield.md) — `FriendCard`/`FieldSlot` 컴포넌트 추가, 덱→핸드 드로우 연출과 핸드→필드 드래그 앤 드롭 구현
 4. [plan-ingame-attack.md](plan-ingame-attack.md) — `Friend` 하이라이트/펀치/이동 연출, `BaseHp` 컴포넌트 추가, `RollAttacker`/`RollTarget`에 실제 공격 판정 연결
+5. [plan-ingame-result.md](plan-ingame-result.md) — `ResultPanel` 컴포넌트 추가, 내 턴 알림 연출과 `GameState.GameOver` 이후 승패 화면·메인메뉴 복귀 연결
 
 ---
 
@@ -60,7 +62,7 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 
 - 합체 판정(`CardCondition`)/카드 대 카드 공격·피격(HP 감소) — 필드에 `Friend`가 놓이는 것과 본체 공격까지만 다룸(4단계)
 - 컴퓨터 측 핸드 연출/필드(1/2/3번), `_computerDeck` 소비 — 컴퓨터의 `PlayFriend`는 로그만 남기는 스텁 그대로(4단계에서 `FieldSlot`만 미리 배치)
-- `GameState.GameOver` 이후의 결과 화면/승패 구분 UI — 상태 전이만 발생
+- `GameState.GameOver` 이후 컴퓨터 진영의 결과 위젯 — 유저 진영 위젯(아이콘/승패 프레임/메인메뉴 복귀)만 5단계에서 다룸
 - `GameType.Battle`(대전) 모드의 InGame 로직 — 이 문서는 Solo 전용
 
 ---
@@ -69,9 +71,10 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 
 - [x] [plan-ingame-decksetup.md](plan-ingame-decksetup.md) 구현
 - [x] [plan-ingame-turnsystem.md](plan-ingame-turnsystem.md) 구현
-- [ ] [plan-ingame-handfield.md](plan-ingame-handfield.md) 구현
-- [ ] [plan-ingame-attack.md](plan-ingame-attack.md) 구현
+- [x] [plan-ingame-handfield.md](plan-ingame-handfield.md) 구현
+- [x] [plan-ingame-attack.md](plan-ingame-attack.md) 구현
+- [ ] [plan-ingame-result.md](plan-ingame-result.md) 구현
 - [ ] (추후) 컴퓨터 핸드/필드(1/2/3번) 별도 계획 문서
 - [ ] (추후) 합체 판정/카드 대 카드 공격·피격을 다루는 후속 계획 문서
-- [ ] (추후) `GameState.GameOver` 결과 화면
+- [ ] (추후) 컴퓨터 진영 결과 위젯
 - [ ] (추후) `GameType.Battle` 모드의 InGame 로직 별도 계획 문서
