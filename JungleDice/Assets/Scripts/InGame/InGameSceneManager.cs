@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using DG.Tweening;
 using JungleDice.Core;
 using JungleDice.Core.Event;
+using JungleDice.Core.Settings;
+using JungleDice.Core.UI;
 using JungleDice.Core.User;
 using JungleDice.Data.Table;
 using TMPro;
@@ -51,6 +53,10 @@ namespace JungleDice.InGame
 
         [SerializeField] private ResultPanel _resultPanel;
 
+        [SerializeField] private Button _settingsButton;
+        [SerializeField] private Transform _canvasTransform;
+
+        private OptionPanel _optionPanel;
         private readonly CompositeDisposable _subs = new();
 
         private List<int> _userDeck;
@@ -71,7 +77,10 @@ namespace JungleDice.InGame
 
             SetupDecks();
 
+            _optionPanel = UIManager.Load<OptionPanel>(_canvasTransform, p => p.Configure(OptionPanelMode.InGame));
+
             _actionButton.onClick.AddListener(OnActionButtonClicked);
+            _settingsButton.onClick.AddListener(_optionPanel.Show);
             StartMatch();
         }
 
@@ -89,6 +98,7 @@ namespace JungleDice.InGame
             }
             else if (e.Next == GameState.GameOver)
             {
+                _settingsButton.interactable = false;
                 _resultPanel.ShowResult(_userWon);
             }
         }
