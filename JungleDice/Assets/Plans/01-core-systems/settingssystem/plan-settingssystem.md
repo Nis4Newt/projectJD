@@ -454,5 +454,5 @@ public record SettingsChanged();
 - [ ] 테스트 시나리오 7개 검증
 - [ ] (추후) `SaveSystem` 구현 시 `LoadFromDisk`/`Save`의 파일 I/O를 `SaveSystem.Load<SettingsData>`/`Save<SettingsData>` 호출로 교체
 - [ ] (추후) `LocalizationSystem` 구현 시 `SettingsChanged` 구독해 언어 변경을 실제 텍스트 갱신에 연결
-- [ ] (추후) 실제 설정 UI(`SettingsPopup` 등) 구현 시 슬라이더/토글을 `SetVolume`/`SetVibration`/`SetLanguage`에 연결
+- [x] (추후) 실제 설정 UI(`SettingsPopup` 등) 구현 시 슬라이더/토글을 `SetVolume`/`SetVibration`/`SetLanguage`에 연결 → [기본 옵션 구현 개요](../../07-option/plan-option.md)(볼륨 슬라이더만 우선 연결, 진동/언어는 여전히 미연결)
 - [ ] (추후) 진동을 유발하는 호출부(버튼 클릭 등) 구현 시 `SettingsSystem.Instance.Vibration` 확인 로직 추가
