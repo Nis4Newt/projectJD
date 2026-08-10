@@ -8,13 +8,13 @@ namespace JungleDice.Core.Settings
 {
     public class SettingsSystem : Singleton<SettingsSystem>
     {
-        private static readonly string SettingsFilePath =
-            Path.Combine(Application.persistentDataPath, "save", "settings.json");
+        private static string SettingsFilePath;
 
         private SettingsData _data;
 
         protected override void OnAwake()
         {
+            SettingsFilePath = Path.Combine(Application.persistentDataPath, "save", "settings.json");
             _data = LoadFromDisk();
         }
 
