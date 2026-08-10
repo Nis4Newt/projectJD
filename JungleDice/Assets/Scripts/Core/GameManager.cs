@@ -15,7 +15,7 @@ namespace JungleDice.Core
             { GameState.Logo,     new() { GameState.Login } },
             { GameState.Login,    new() { GameState.MainMenu } },
             { GameState.MainMenu, new() { GameState.InGame } },
-            { GameState.InGame,   new() { GameState.Pause, GameState.GameOver } },
+            { GameState.InGame,   new() { GameState.Pause, GameState.GameOver, GameState.MainMenu } },
             { GameState.Pause,    new() { GameState.InGame, GameState.MainMenu } },
             { GameState.GameOver, new() { GameState.MainMenu, GameState.InGame } },
         };
