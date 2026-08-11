@@ -50,6 +50,8 @@ namespace JungleDice.InGame
         [SerializeField] private float _attackerPunchDuration = 1f;
         [SerializeField] private float _moveToTargetDuration = 0.3f;
         [SerializeField] private float _moveBackDuration = 0.3f;
+        [SerializeField] private float _mergePunchScale = 0.1f;
+        [SerializeField] private float _mergePunchDuration = 0.25f;
 
         [SerializeField] private ResultPanel _resultPanel;
 
@@ -359,7 +361,19 @@ namespace JungleDice.InGame
 
         public void TryPlaceFriendCard(FieldSlot slot, FriendCard card)
         {
-            if (slot.IsOccupied) return; // 이미 친구카드가 있다면 놓을 수 없음
+            if (slot.IsOccupied)
+            {
+                var existing = slot.GetComponentInChildren<Friend>();
+                if (existing.Key != card.Key) return; // 다른 종류 — 배치 거부, OnEndDrag가 원래 슬롯으로 복귀시킴
+
+                var data = CardTable.Instance.Get(card.Key);
+                existing.MergeWith(data.att, data.hp);
+                existing.PunchScale(_mergePunchScale, _mergePunchDuration);
+
+                card.NotifyPlaced();
+                Destroy(card.gameObject);
+                return;
+            }
 
             var friend = Instantiate(_friendPrefab, slot.transform);
             friend.SetKey(card.Key);

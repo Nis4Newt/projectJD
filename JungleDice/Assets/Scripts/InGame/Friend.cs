@@ -44,6 +44,20 @@ namespace JungleDice.InGame
             _hpText.color = GetStatColor(CurrentHp, previousHp);
         }
 
+        public void MergeWith(int addAtt, int addHp)
+        {
+            int previousAtt = Att;
+            int previousHp = CurrentHp;
+
+            Att += addAtt;
+            CurrentHp += addHp;
+
+            _attText.text = Att.ToString();
+            _attText.color = GetStatColor(Att, previousAtt);
+            _hpText.text = CurrentHp.ToString();
+            _hpText.color = GetStatColor(CurrentHp, previousHp);
+        }
+
         public void DoubleAtt()
         {
             int previousAtt = Att;
