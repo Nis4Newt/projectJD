@@ -1,11 +1,21 @@
-key|cardname|att|hp|cond|target|explain
-1000|대지의 왕|2|2|merge|same|내 무작위 친구 공 2배
-1001|9개의 다리|2|2|merge|same|같은 친구와 합쳐질때 상대 무작위 유닛 하나의 능력치가 절반이 됩니다.
-1002|늪지의 송곳니|2|2|merge|same|같은 친구와 합쳐질때 상대 플레이어에게 2의 데미지를 줍니다.
-1003|땅의 그림자|2|2|except|same|이 친구는 능력의 대상이 되지 않습니다.
-1004|파란 딸기|2|2|none|all|모든 종류의 친구와 합칠 수 있습니다.
-1005|운반자|2|2|merge|same|같은 친구와 합쳐질때 상대 무작위 친구에게 1의 데미지를 줍니다.
-1006|바다의 수호자|2|2|merge|same|같은 친구와 합쳐질때 내 모험가의 생명력을 2 회복합니다.
-1007|물렁한 돌|2|2|merge|same|합쳐질때 천보
-1008|뿔달린 말|4|1|none|same|능력X
-1009|아를라스|3|3|merge|same|내 무작위 친구 생 2배
+key|animal|cardname|sheets|att|hp|cond|target|effect|scope|explain
+1000|코끼리|대지의 왕|10|2|2|merge|same|Att*2|AllyRandom|같은 친구와 합쳐질때 내 필드의 무작위 친구 공격력 2배
+1001|거미|9개의 다리|10|2|2|merge|same|Att/2,Hp/2|EnemyRandom|같은 친구와 합쳐질때 상대 필드의 무작위 친구의 능력치가 절반
+1002|개구리|늪지의 송곳니|10|2|2|merge|same|dmg+2|EnemyBase|같은 친구와 합쳐질때 상대 모험가에게 2의 데미지
+1003|독수리|땅의 그림자|10|2|2|except|same|None|None|이 친구는 능력의 대상이 되지 않습니다.
+1004|블루베리|파란 딸기|10|1|1|none|all|None|None|모든 종류의 친구에 합쳐질 수 있습니다.
+1005|박쥐|운반자|10|2|2|merge|same|dmg+1|EnemyRandom|같은 친구와 합쳐질때 상대 필드의 무작위 친구에게 1의 데미지
+1006|고래|바다의 수호자|10|2|2|merge|same|heal+2|AllyBase|같은 친구와 합쳐질때 내 모험가의 생명력을 2 회복
+1007|거북이|물렁한 돌|10|2|2|merge|same|Shield|Self|같은 친구와 합쳐질때 공격을 1회 방어
+1008|코뿔소|뿔달린 말|10|4|1|none|same|None|None|높은 공격력
+1009|바오밥나무|아를라스|10|3|3|merge|same|Hp*2|AllyRandom|같은 친구와 합쳐질때 내 필드의 무작위 친구 체력 2배
+1010|버섯|가짜 풀|10|2|2|merge|same|spawn+1010,att=2,hp=2|AllyRandom|같은 친구와 합쳐질때 내 필드의 무작위 친구에게 포자감염 : 죽은 자리에 버섯 생성
+1011|까마귀|흰머리|10|2|2|merge|same|MultiplierMerge|None|같은 친구와 합쳐질때 필드에 같은 친구 수 만큼 곱해서 머지
+1012|나비|무리 어미|15|1|1|none|same|None|None|이 친구는 15장이 들어갑니다.
+1013|염소|뒤집힌 별|10|2|2|merge|same|Att+1|AllyAll|같은 친구와 합쳐질때 내 필드 전체 공격력 +1
+1014|고릴라|검은 거인|10|2|2|merge|same|dmg+1|EnemyAll|같은 친구와 합쳐질때 상대 필드 전체에 1의 데미지
+1015|달팽이|루 카르콜|5|2|2|merge|same|Shield|AllyAll|같은 친구와 합쳐질때 내 필드 전체 방어 1회
+1016|해파리|표류 잼|10|2|2|merge|same|Hp+1|AllyAll|같은 친구와 합쳐질때 내 필드 전체 체력 +1
+1017|오리|미운 백조|10|2|2|merge|same|heal+max|AllyRandom|같은 친구와 합쳐질때 내 필드의 무작위 친구 체력을 최대치까지 회복
+1018|고사리|같은 손|10|2|2|die|same|spawn+1018,att=1,hp=1|None|사망 시 1/1로 1회 부활
+1019|하이에나|이빨 룰렛|10|2|2|none|any|None|None|모든 종류의 친구를 잡아먹을 수 있음 (능력 발동 안됨)

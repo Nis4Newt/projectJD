@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using DG.Tweening;
 using JungleDice.Core;
 using JungleDice.Core.Event;
@@ -50,6 +51,8 @@ namespace JungleDice.InGame
         [SerializeField] private float _attackerPunchDuration = 1f;
         [SerializeField] private float _moveToTargetDuration = 0.3f;
         [SerializeField] private float _moveBackDuration = 0.3f;
+        [SerializeField] private float _mergePunchScale = 0.1f;
+        [SerializeField] private float _mergePunchDuration = 0.25f;
 
         [SerializeField] private ResultPanel _resultPanel;
 
@@ -276,7 +279,12 @@ namespace JungleDice.InGame
 
             if (attackerDied)
             {
-                Destroy(attacker.gameObject);
+                bool revived = TryHandleDeath(attacker, _attackerSlot.transform);
+                if (revived)
+                {
+                    attacker.SetParent(_attackerSlot.transform);
+                    attacker.SetHighlight(false, Color.clear);
+                }
             }
             else
             {
@@ -286,8 +294,15 @@ namespace JungleDice.InGame
 
             if (targetFriend != null)
             {
-                if (targetDied) Destroy(targetFriend.gameObject);
-                else targetFriend.SetHighlight(false, Color.clear);
+                if (targetDied)
+                {
+                    bool revived = TryHandleDeath(targetFriend, targetSlot.transform);
+                    if (revived) targetFriend.SetHighlight(false, Color.clear);
+                }
+                else
+                {
+                    targetFriend.SetHighlight(false, Color.clear);
+                }
             }
 
             if (targetFriend == null && GetBase(targetSlot.Index).CurrentHp <= 0)
@@ -359,13 +374,289 @@ namespace JungleDice.InGame
 
         public void TryPlaceFriendCard(FieldSlot slot, FriendCard card)
         {
-            if (slot.IsOccupied) return; // 이미 친구카드가 있다면 놓을 수 없음
+            if (slot.IsOccupied)
+            {
+                var existing = slot.GetComponentInChildren<Friend>();
+                if (!CanMerge(existing, card.Key)) return; // 병합 불가 — 배치 거부, OnEndDrag가 원래 슬롯으로 복귀시킴
+
+                MergeCardIntoSlot(existing, card.Key, slot.Index);
+
+                card.NotifyPlaced();
+                Destroy(card.gameObject);
+                return;
+            }
 
             var friend = Instantiate(_friendPrefab, slot.transform);
             friend.SetKey(card.Key);
 
             card.NotifyPlaced();
             Destroy(card.gameObject);
+        }
+
+        // 같은 종류, 또는 슬롯의 카드가 target=Any(베이스 — 무엇이든 받아줌, 예: 하이에나), 또는 낸/합칠 카드가 target=All(무엇에든 합쳐짐, 예: 블루베리)일 때 합체 가능
+        private bool CanMerge(Friend existing, int mergeKey)
+        {
+            var existingData = CardTable.Instance.Get(existing.Key);
+            var data = CardTable.Instance.Get(mergeKey);
+
+            bool sameKind = existing.Key == mergeKey;
+            bool existingAcceptsAnything = existingData.target == CardTarget.Any; // 필드 카드가 베이스 역할(하이에나류) — 어떤 카드가 와도 받아줌
+            bool mergeJoinsAnything = data.target == CardTarget.All; // 낸/합칠 카드가 무엇에든 합쳐지는 역할(블루베리류)
+            return sameKind || existingAcceptsAnything || mergeJoinsAnything;
+        }
+
+        // existing에 mergeKey 카드의 기본 스탯을 합산 + 연출 + 발동 효과. 호출 전 CanMerge로 이미 통과된 조합이라고 가정한다.
+        // slotIndex는 existing이 실제로 놓인 필드 절대 번호(1~6) — "내 필드"/"상대 필드"를 이 위치 기준으로 판정한다(고정된 유저=Ally 아님, 치트로 컴퓨터 필드에서 병합해도 정확히 동작해야 함)
+        private void MergeCardIntoSlot(Friend existing, int mergeKey, int slotIndex)
+        {
+            var existingData = CardTable.Instance.Get(existing.Key);
+            var data = CardTable.Instance.Get(mergeKey);
+
+            int addAtt = data.att;
+            int addHp = data.hp;
+            if (existingData.EffectClauses.Any(c => c.Keyword == "MultiplierMerge"))
+            {
+                var (ownStart, ownEnd) = OwnFieldRange(slotIndex);
+                int sameCount = GetFieldFriends(ownStart, ownEnd).Count(f => f.Key == existing.Key);
+                addAtt *= sameCount;
+                addHp *= sameCount;
+            }
+
+            existing.MergeWith(addAtt, addHp);
+            existing.PunchScale(_mergePunchScale, _mergePunchDuration);
+            TriggerMergeAbility(existing, slotIndex);
+        }
+
+        // 슬롯을 강제로 비운다 — 점유돼 있지 않으면 아무 것도 하지 않는다(치트 전용, TryHandleDeath를 거치지 않아 부활/포자감염을 트리거하지 않음)
+        public void CheatClearSlot(int slotIndex)
+        {
+            var slot = GetFieldSlot(slotIndex);
+            if (!slot.IsOccupied) return;
+
+            Destroy(slot.GetComponentInChildren<Friend>().gameObject);
+        }
+
+        // 슬롯에 key를 강제로 채운다 — 점유돼 있으면 기존 카드를 먼저 제거하고 새로 채운다(치트 전용, 병합 규칙을 타지 않고 항상 덮어씀)
+        public void CheatSetSlot(int slotIndex, int key)
+        {
+            CheatClearSlot(slotIndex);
+
+            var slot = GetFieldSlot(slotIndex);
+            var friend = Instantiate(_friendPrefab, slot.transform);
+            friend.SetKey(key);
+        }
+
+        // 점유된 슬롯에 key를 합친다 — TryPlaceFriendCard와 동일한 CanMerge 판정을 통과해야 실제로 합쳐진다(치트 전용이지만 정상 합체 규칙은 유지)
+        public void CheatMergeIntoSlot(int slotIndex, int mergeKey)
+        {
+            var slot = GetFieldSlot(slotIndex);
+            if (!slot.IsOccupied)
+            {
+                Debug.LogWarning($"[Cheat] 슬롯 {slotIndex}이 비어 있어 병합할 수 없습니다.");
+                return;
+            }
+
+            var existing = slot.GetComponentInChildren<Friend>();
+            if (!CanMerge(existing, mergeKey))
+            {
+                Debug.LogWarning($"[Cheat] 슬롯 {slotIndex}(key={existing.Key})에 key={mergeKey}를 합칠 수 없습니다 — 같은 종류가 아니고 target(All/Any) 조건도 만족하지 않습니다.");
+                return;
+            }
+
+            MergeCardIntoSlot(existing, mergeKey, slotIndex);
+        }
+
+        // 슬롯의 카드에 데미지를 강제로 입힌다 — Friend.TakeDamage를 그대로 재사용(방어막 소모 포함), 죽으면 TryHandleDeath로 정상 사망 처리(부활/포자감염 포함)와 동일하게 처리
+        public void CheatDamageSlot(int slotIndex, int amount)
+        {
+            var slot = GetFieldSlot(slotIndex);
+            if (!slot.IsOccupied)
+            {
+                Debug.LogWarning($"[Cheat] 슬롯 {slotIndex}이 비어 있어 데미지를 적용할 수 없습니다.");
+                return;
+            }
+
+            var friend = slot.GetComponentInChildren<Friend>();
+            friend.TakeDamage(amount);
+
+            if (friend.IsDead) TryHandleDeath(friend, slot.transform);
+        }
+
+        // 유저가 핸드 카드를 드래그하는 동안 병합 가능한 유저 필드 슬롯을 초록으로 미리 보여준다.
+        // 판정식은 TryPlaceFriendCard와 반드시 동일하게 유지한다.
+        public void ShowMergePreview(int draggedKey)
+        {
+            foreach (var slot in _fieldSlots)
+            {
+                if (slot.Index < UserFieldStart || !slot.IsOccupied) continue;
+                var friend = slot.GetComponentInChildren<Friend>();
+                if (CanMerge(friend, draggedKey)) friend.SetHighlight(true, Color.green);
+            }
+        }
+
+        public void HideMergePreview()
+        {
+            foreach (var slot in _fieldSlots)
+            {
+                if (slot.Index < UserFieldStart || !slot.IsOccupied) continue;
+                slot.GetComponentInChildren<Friend>().SetHighlight(false, Color.clear);
+            }
+        }
+
+        private const int ComputerFieldStart = 1, ComputerFieldEnd = 3;
+        private const int UserFieldStart = 4, UserFieldEnd = 6;
+
+        // slotIndex가 속한 진영의 필드 범위("내 필드") — 유저 고정이 아니라 실제 슬롯 위치 기준(치트로 컴퓨터 필드에서 병합해도 그 진영 기준으로 판정)
+        private (int Start, int End) OwnFieldRange(int slotIndex) =>
+            slotIndex <= ComputerFieldEnd ? (ComputerFieldStart, ComputerFieldEnd) : (UserFieldStart, UserFieldEnd);
+
+        // slotIndex 반대 진영의 필드 범위("상대 필드")
+        private (int Start, int End) OpponentFieldRange(int slotIndex) =>
+            slotIndex <= ComputerFieldEnd ? (UserFieldStart, UserFieldEnd) : (ComputerFieldStart, ComputerFieldEnd);
+
+        private List<Friend> GetFieldFriends(int fromIndex, int toIndex)
+        {
+            var result = new List<Friend>();
+            for (int i = fromIndex; i <= toIndex; i++)
+            {
+                var slot = GetFieldSlot(i);
+                if (slot.IsOccupied) result.Add(slot.GetComponentInChildren<Friend>());
+            }
+            return result;
+        }
+
+        private Friend PickRandomTargetable(List<Friend> candidates)
+        {
+            candidates.RemoveAll(f => CardTable.Instance.GetCond(f.Key) == CardCondition.Except);
+            return candidates.Count == 0 ? null : candidates[Random.Range(0, candidates.Count)];
+        }
+
+        // 병합 직후 발동 효과 — scope로 대상을, EffectClauses로 동작을 결정한다(카드 key로 분기하지 않음).
+        // slotIndex는 existing이 실제로 놓인 필드 절대 번호 — Ally/Enemy는 이 위치를 기준으로 판정한다(유저=Ally 고정 아님)
+        private void TriggerMergeAbility(Friend existing, int slotIndex)
+        {
+            var data = CardTable.Instance.Get(existing.Key);
+            if (data.cond != CardCondition.Merge) return;
+            if (data.EffectClauses.Any(c => c.Keyword == "MultiplierMerge")) return; // 병합 공식 자체(TryPlaceFriendCard)에서 이미 처리됨
+
+            var (ownStart, ownEnd) = OwnFieldRange(slotIndex);
+            var (oppStart, oppEnd) = OpponentFieldRange(slotIndex);
+
+            switch (data.scope)
+            {
+                case CardAbilityScope.Self:
+                    ApplyClausesToFriend(data.EffectClauses, existing);
+                    break;
+                case CardAbilityScope.AllyRandom:
+                {
+                    var candidates = GetFieldFriends(ownStart, ownEnd);
+                    candidates.Remove(existing); // 무작위 단일 대상에서는 자기 자신 제외(AllyAll처럼 전체 적용일 때는 포함됨)
+                    ApplyClausesToFriend(data.EffectClauses, PickRandomTargetable(candidates));
+                    break;
+                }
+                case CardAbilityScope.EnemyRandom:
+                    ApplyClausesToFriend(data.EffectClauses, PickRandomTargetable(GetFieldFriends(oppStart, oppEnd)));
+                    break;
+                case CardAbilityScope.AllyAll:
+                    foreach (var f in GetFieldFriends(ownStart, ownEnd)) ApplyClausesToFriend(data.EffectClauses, f);
+                    break;
+                case CardAbilityScope.EnemyAll:
+                    foreach (var f in GetFieldFriends(oppStart, oppEnd)) ApplyClausesToFriend(data.EffectClauses, f);
+                    break;
+                case CardAbilityScope.AllyBase:
+                    ApplyClausesToBase(data.EffectClauses, GetBase(slotIndex));
+                    break;
+                case CardAbilityScope.EnemyBase:
+                    ApplyClausesToBase(data.EffectClauses, slotIndex <= ComputerFieldEnd ? _userBase : _computerBase);
+                    break;
+            }
+        }
+
+        // Friend 대상 — 조각의 종류(Kind)별로 적용. 적용 후 죽었으면(능력엔 복귀 연출이 없으므로) 그 자리에서 즉시 제거
+        private void ApplyClausesToFriend(List<CardEffectClause> clauses, Friend target)
+        {
+            if (target == null) return;
+
+            foreach (var clause in clauses)
+            {
+                switch (clause.Kind)
+                {
+                    case CardEffectClauseKind.Stat:
+                        switch (clause.Stat, clause.Op)
+                        {
+                            case (CardStat.Att, '+'): target.AddAtt(clause.Value); break;
+                            case (CardStat.Att, '-'): target.AddAtt(-clause.Value); break;
+                            case (CardStat.Att, '*'): target.MultiplyAtt(clause.Value); break;
+                            case (CardStat.Att, '/'): target.DivideAtt(clause.Value); break;
+                            case (CardStat.Hp, '+'): target.AddHp(clause.Value); break;    // 성장 — MaxHp도 같이 오름
+                            case (CardStat.Hp, '-'): target.AddHp(-clause.Value); break;   // 저하 — MaxHp도 같이 내려감(전투 피해와 다름, dmg 사용)
+                            case (CardStat.Hp, '*'): target.MultiplyHp(clause.Value); break;
+                            case (CardStat.Hp, '/'): target.DivideHp(clause.Value); break;
+                        }
+                        break;
+                    case CardEffectClauseKind.Damage:
+                        target.TakeDamage(clause.Value); // 방어막 소모 대상 — 전투와 같은 피해
+                        break;
+                    case CardEffectClauseKind.Heal:
+                        target.Heal(clause.Value); // MaxHp까지만, MaxHp 자체는 불변
+                        break;
+                    case CardEffectClauseKind.HealToMax:
+                        target.HealToMax();
+                        break;
+                    case CardEffectClauseKind.Keyword:
+                        if (clause.Keyword == "Shield") target.AddShield();
+                        // "MultiplierMerge"는 TriggerMergeAbility 진입 시점에 이미 걸러져 여기 도달하지 않음
+                        break;
+                    case CardEffectClauseKind.Spawn:
+                        target.ApplySpawnMark(clause.SpawnKey, clause.SpawnAtt, clause.SpawnHp); // 포자감염류 — 이 대상이 나중에 죽을 때 스폰
+                        break;
+                }
+            }
+
+            if (target.IsDead) Destroy(target.gameObject);
+        }
+
+        // BaseStone 대상 — 피해/회복만 의미가 있다(Att, 스폰 등은 본체를 대상으로 하는 카드가 없어 무시)
+        private void ApplyClausesToBase(List<CardEffectClause> clauses, BaseStone target)
+        {
+            foreach (var clause in clauses)
+            {
+                switch (clause.Kind)
+                {
+                    case CardEffectClauseKind.Damage: target.TakeDamage(clause.Value); break;
+                    case CardEffectClauseKind.Heal: target.Heal(clause.Value); break;
+                }
+            }
+        }
+
+        // 사망 확정된 Friend를 부활/포자감염 규칙에 따라 처리한다. true를 반환하면 부활 성공 — 파괴하지 않고 필드에 남긴다.
+        private bool TryHandleDeath(Friend friend, Transform slotTransform)
+        {
+            var data = CardTable.Instance.Get(friend.Key);
+            if (data.cond == CardCondition.Die)
+            {
+                foreach (var clause in data.EffectClauses)
+                {
+                    if (clause.Kind != CardEffectClauseKind.Spawn) continue;
+                    if (!friend.TryRevive(clause.SpawnAtt, clause.SpawnHp)) break; // 이미 한 번 부활했으면 그대로 사망 처리로 진행
+
+                    friend.PunchScale(_mergePunchScale, _mergePunchDuration); // 부활 연출은 별도로 만들지 않고 병합 펀치 재사용
+                    return true;
+                }
+            }
+
+            bool hasSpawnMark = friend.SpawnMark.HasMark;
+            int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
+            Destroy(friend.gameObject);
+            if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
+            return false;
+        }
+
+        private void SpawnFriendDirectly(int key, int att, int hp, Transform slotTransform)
+        {
+            var friend = Instantiate(_friendPrefab, slotTransform);
+            friend.SetKey(key);
+            friend.OverrideStats(att, hp);
         }
 
         protected override void OnDestroy()

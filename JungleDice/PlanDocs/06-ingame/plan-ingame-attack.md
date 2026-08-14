@@ -462,7 +462,7 @@ Assets/Scripts/
 - 타격음/타격 이펙트의 실제 재생 — 코드 상 주석으로 지점만 표시
 - 컴퓨터 필드가 채워진 이후의 "여러 슬롯 중 전략적으로 고르는" AI 판단 — 지금도 이후로도 순수 주사위 값 그대로 사용
 - ~~공격 애니메이션 도중 유저 조작(드래그 등) 차단 — 버튼은 이미 `RollTarget` 진입 시 비활성화되지만, 핸드 카드 드래그는 별도로 막지 않음(YAGNI, 현재 `PlayFriend` 단계가 아니므로 애초에 핸드 조작 동선과 겹치지 않음)~~ → 아래 결정 7에서 "내 차례의 `PlayFriend`가 아니면 드래그 자체가 시작되지 않음"으로 해결(공격 연출 도중도 자동으로 포함)
-- 합체 판정(`CardCondition`/`CardTarget`) — 별도 후속 계획 문서
+- 합체 판정 — 최소 병합(같은 종류, 공격력/체력 누적)은 [친구카드 합체 계획](plan-ingame-merge.md)에서 다룸. `CardCondition`/`CardTarget`을 이용한 발동 효과·이종 합체는 그 문서에서도 제외, 별도 후속 계획 문서
 - 카드 사망 이펙트/사운드, 파괴 애니메이션 — `Destroy` 직전에 아무 연출 없이 즉시 사라짐(위 "타격음/이펙트 재생 지점" 주석과 같은 성격의 후속 작업)
 - 카드 사망에 따른 승패 판정 — 패배 조건은 여전히 본체 체력 0뿐, 필드의 카드가 전부 죽어도 게임은 계속됨
 - `DoubleAtt`로 오른 공격력이 다음 턴에도 유지되는지에 대한 별도 밸런스 검증 — 지금은 `Att`가 한번 오르면 그 카드가 필드에 남아있는 한 계속 유지된다(별도로 되돌리는 로직 없음), 과도한 상승에 대한 상한선 등은 범위 밖
@@ -540,9 +540,10 @@ Assets/Scripts/
 - [ ] `_dragLayer`와 같은 형태로 `AttackLayer` 오브젝트 신설 후 `IngameSceneManager._attackLayer`에 연결 (Unity 에디터 작업)
 - [ ] `IngameSceneManager`에 `_fieldSlots`(6개, 순서 확인)/`_attackLayer`/`_userBase`/`_computerBase` 인스펙터 연결 (Unity 에디터 작업)
 - [ ] 테스트 시나리오 12개 검증 (특히 #5~#7: 카드 사망·필드 제거, #8: 자기 자신 대상 시 공격력 2배 어드밴티지, #9: 본체 피해·게임오버 전이, #12: 내 턴 아닐 때 드래그 차단)
+- [x] [친구카드 능력 계획](plan-ingame-ability.md)이 `ResolveAttackRoutine`의 사망 제거 코드(`Destroy(attacker.gameObject)`/`Destroy(targetFriend.gameObject)`)를 `TryHandleDeath(Friend, Transform)` 호출로 확장 — `CardCondition.Die`(1018) 부활, 포자감염(1010) 시 사망 자리에 카드 재생성을 처리. 반환값이 `true`(부활)면 기존 "생존 시" 분기(슬롯 복귀 + 하이라이트 해제)를 그대로 탄다
 - [ ] (추후) 하이라이트 전용 머티리얼 제작 후 `Highlight` 오버레이의 `Material` 교체 (아트 작업, 코드 변경 없음)
 - [ ] (추후) 컴퓨터 핸드/필드(1/2/3번) 실제 배치를 다루는 별도 계획 문서
 - [ ] (추후) `GameState.GameOver` 결과 화면
-- [ ] (추후) 합체 판정(`CardCondition`/`CardTarget`)을 다루는 후속 계획 문서
+- [ ] (추후) [친구카드 합체 계획](plan-ingame-merge.md) 구현, 이후 `CardCondition`/`CardTarget` 발동 효과·이종 합체를 다루는 후속 계획 문서
 - [ ] (추후) 카드 사망 이펙트/사운드
 - [ ] (추후) 카드 사망이 승패에 영향을 주는지 여부(현재는 본체 체력만 승패 기준) 재검토
