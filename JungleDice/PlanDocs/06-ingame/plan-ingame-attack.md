@@ -540,6 +540,7 @@ Assets/Scripts/
 - [ ] `_dragLayer`와 같은 형태로 `AttackLayer` 오브젝트 신설 후 `IngameSceneManager._attackLayer`에 연결 (Unity 에디터 작업)
 - [ ] `IngameSceneManager`에 `_fieldSlots`(6개, 순서 확인)/`_attackLayer`/`_userBase`/`_computerBase` 인스펙터 연결 (Unity 에디터 작업)
 - [ ] 테스트 시나리오 12개 검증 (특히 #5~#7: 카드 사망·필드 제거, #8: 자기 자신 대상 시 공격력 2배 어드밴티지, #9: 본체 피해·게임오버 전이, #12: 내 턴 아닐 때 드래그 차단)
+- [x] [친구카드 능력 계획](plan-ingame-ability.md)이 `ResolveAttackRoutine`의 사망 제거 코드(`Destroy(attacker.gameObject)`/`Destroy(targetFriend.gameObject)`)를 `TryHandleDeath(Friend, Transform)` 호출로 확장 — `CardCondition.Die`(1018) 부활, 포자감염(1010) 시 사망 자리에 카드 재생성을 처리. 반환값이 `true`(부활)면 기존 "생존 시" 분기(슬롯 복귀 + 하이라이트 해제)를 그대로 탄다
 - [ ] (추후) 하이라이트 전용 머티리얼 제작 후 `Highlight` 오버레이의 `Material` 교체 (아트 작업, 코드 변경 없음)
 - [ ] (추후) 컴퓨터 핸드/필드(1/2/3번) 실제 배치를 다루는 별도 계획 문서
 - [ ] (추후) `GameState.GameOver` 결과 화면
