@@ -427,6 +427,61 @@ namespace JungleDice.InGame
             TriggerMergeAbility(existing, slotIndex);
         }
 
+        // 슬롯을 강제로 비운다 — 점유돼 있지 않으면 아무 것도 하지 않는다(치트 전용, TryHandleDeath를 거치지 않아 부활/포자감염을 트리거하지 않음)
+        public void CheatClearSlot(int slotIndex)
+        {
+            var slot = GetFieldSlot(slotIndex);
+            if (!slot.IsOccupied) return;
+
+            Destroy(slot.GetComponentInChildren<Friend>().gameObject);
+        }
+
+        // 슬롯에 key를 강제로 채운다 — 점유돼 있으면 기존 카드를 먼저 제거하고 새로 채운다(치트 전용, 병합 규칙을 타지 않고 항상 덮어씀)
+        public void CheatSetSlot(int slotIndex, int key)
+        {
+            CheatClearSlot(slotIndex);
+
+            var slot = GetFieldSlot(slotIndex);
+            var friend = Instantiate(_friendPrefab, slot.transform);
+            friend.SetKey(key);
+        }
+
+        // 점유된 슬롯에 key를 합친다 — TryPlaceFriendCard와 동일한 CanMerge 판정을 통과해야 실제로 합쳐진다(치트 전용이지만 정상 합체 규칙은 유지)
+        public void CheatMergeIntoSlot(int slotIndex, int mergeKey)
+        {
+            var slot = GetFieldSlot(slotIndex);
+            if (!slot.IsOccupied)
+            {
+                Debug.LogWarning($"[Cheat] 슬롯 {slotIndex}이 비어 있어 병합할 수 없습니다.");
+                return;
+            }
+
+            var existing = slot.GetComponentInChildren<Friend>();
+            if (!CanMerge(existing, mergeKey))
+            {
+                Debug.LogWarning($"[Cheat] 슬롯 {slotIndex}(key={existing.Key})에 key={mergeKey}를 합칠 수 없습니다 — 같은 종류가 아니고 target(All/Any) 조건도 만족하지 않습니다.");
+                return;
+            }
+
+            MergeCardIntoSlot(existing, mergeKey, slotIndex);
+        }
+
+        // 슬롯의 카드에 데미지를 강제로 입힌다 — Friend.TakeDamage를 그대로 재사용(방어막 소모 포함), 죽으면 TryHandleDeath로 정상 사망 처리(부활/포자감염 포함)와 동일하게 처리
+        public void CheatDamageSlot(int slotIndex, int amount)
+        {
+            var slot = GetFieldSlot(slotIndex);
+            if (!slot.IsOccupied)
+            {
+                Debug.LogWarning($"[Cheat] 슬롯 {slotIndex}이 비어 있어 데미지를 적용할 수 없습니다.");
+                return;
+            }
+
+            var friend = slot.GetComponentInChildren<Friend>();
+            friend.TakeDamage(amount);
+
+            if (friend.IsDead) TryHandleDeath(friend, slot.transform);
+        }
+
         // 유저가 핸드 카드를 드래그하는 동안 병합 가능한 유저 필드 슬롯을 초록으로 미리 보여준다.
         // 판정식은 TryPlaceFriendCard와 반드시 동일하게 유지한다.
         public void ShowMergePreview(int draggedKey)
