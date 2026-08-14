@@ -447,10 +447,23 @@ public bool HasShield { get; private set; }
 public bool HasRevived { get; private set; }
 
 // 사망 시 새 카드를 낳는 예약(부활/포자감염 공용) — key/att/hp는 spawn+key,att=n,hp=n 조각에서 옴
-public bool HasSpawnMark { get; private set; }
-public int SpawnMarkKey { get; private set; }
-public int SpawnMarkAtt { get; private set; }
-public int SpawnMarkHp { get; private set; }
+public SpawnMarkInfo SpawnMark { get; } = new SpawnMarkInfo();
+
+public class SpawnMarkInfo
+{
+    public bool HasMark { get; private set; }
+    public int Key { get; private set; }
+    public int Att { get; private set; }
+    public int Hp { get; private set; }
+
+    public void Set(int key, int att, int hp)
+    {
+        HasMark = true;
+        Key = key;
+        Att = att;
+        Hp = hp;
+    }
+}
 
 public void SetKey(int key) // 기존 메서드 수정 — MaxHp 초기화 추가
 {
@@ -552,13 +565,7 @@ public void HealToMax()
 
 public void AddShield() => HasShield = true; // 이미 있어도 그대로 유지(스택 없음)
 
-public void ApplySpawnMark(int key, int att, int hp)
-{
-    HasSpawnMark = true;
-    SpawnMarkKey = key;
-    SpawnMarkAtt = att;
-    SpawnMarkHp = hp;
-}
+public void ApplySpawnMark(int key, int att, int hp) => SpawnMark.Set(key, att, hp);
 
 // 사망 시 1회 부활(CardCondition.Die) — att/hp는 자신의 effect(spawn+key,att=n,hp=n)에서 읽어온 값
 public bool TryRevive(int att, int hp)
@@ -597,9 +604,9 @@ public void OverrideStats(int att, int hp)
 1010(포자감염→사망 시 카드 생성)과 1018(사망 시 1회 부활)은 둘 다 `spawn+key,att=n,hp=n` 문법을 쓰지만 **평가 시점이 다르다**:
 
 - **1018(부활)**: `cond=Die`라 병합과 무관하게 언제든 죽을 수 있다. **자기 자신이 죽는 바로 그 순간**, 자기 자신의 `EffectClauses`에서 `Spawn` 조각을 찾아 그 att/hp로 자신을 되살린다(`Friend.TryRevive`, 새 오브젝트를 만들지 않고 같은 인스턴스를 재활용).
-- **1010(포자감염)**: `cond=Merge`, `scope=AllyRandom`이라 **병합 시점에** 무작위 아군 한 장에게 "죽으면 이 key/att/hp로 카드가 생긴다"는 예약(`HasSpawnMark`)을 걸어 둔다(5번 결정의 `Spawn` 케이스). 그 마킹된 대상이 **훗날 실제로 죽는 시점에** 예약된 정보로 새 `Friend`를 그 슬롯에 생성한다 — 마킹된 대상이 1010 자신일 필요는 없다(다른 종류 카드가 마킹된 채 죽어도 항상 1010이 태어난다).
+- **1010(포자감염)**: `cond=Merge`, `scope=AllyRandom`이라 **병합 시점에** 무작위 아군 한 장에게 "죽으면 이 key/att/hp로 카드가 생긴다"는 예약(`SpawnMark`)을 걸어 둔다(5번 결정의 `Spawn` 케이스). 그 마킹된 대상이 **훗날 실제로 죽는 시점에** 예약된 정보로 새 `Friend`를 그 슬롯에 생성한다 — 마킹된 대상이 1010 자신일 필요는 없다(다른 종류 카드가 마킹된 채 죽어도 항상 1010이 태어난다).
 
-`Friend`에는 이미 6번 결정에서 `HasSpawnMark`/`TryRevive()` API를 정의했으므로, `ResolveAttackRoutine` 쪽 변경은 아래 헬퍼 하나로 정리된다.
+`Friend`에는 이미 6번 결정에서 `SpawnMark`/`TryRevive()` API를 정의했으므로, `ResolveAttackRoutine` 쪽 변경은 아래 헬퍼 하나로 정리된다.
 
 ```csharp
 // InGameSceneManager.cs
@@ -619,8 +626,8 @@ private bool TryHandleDeath(Friend friend, Transform slotTransform)
         }
     }
 
-    bool hasSpawnMark = friend.HasSpawnMark;
-    int spawnKey = friend.SpawnMarkKey, spawnAtt = friend.SpawnMarkAtt, spawnHp = friend.SpawnMarkHp;
+    bool hasSpawnMark = friend.SpawnMark.HasMark;
+    int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
     Destroy(friend.gameObject);
     if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
     return false;
@@ -647,7 +654,7 @@ Friend (기존 파일 수정, InGame/)
 ├── MaxHp : int { get; }                              ← 신규
 ├── HasShield : bool { get; }                         ← 신규
 ├── HasRevived : bool { get; }                        ← 신규
-├── HasSpawnMark / SpawnMarkKey / SpawnMarkAtt / SpawnMarkHp ← 신규
+├── SpawnMark : SpawnMarkInfo (HasMark/Key/Att/Hp)     ← 신규, 중첩 클래스로 묶음
 ├── SetKey(int)                                       ← 수정, MaxHp 초기화 추가
 ├── TakeDamage(int)                                   ← 수정, 방어막 소모 우선 처리
 ├── MergeWith(int, int)                               ← 수정, MaxHp 누적 추가
@@ -711,7 +718,7 @@ Assets/
 
 ## 이번 범위에서 제외
 
-- 방어막(`HasShield`)·포자감염 마킹(`HasSpawnMark`)의 시각적 표시(아이콘, 오버레이 등) — 지금은 상태값만 존재하고 카드 위에 드러나지 않는다. 상태를 눈으로 확인하려면 로그나 디버거에 의존해야 한다(요청자 확인 후 아트 리소스가 준비되면 후속 문서에서 추가).
+- 방어막(`HasShield`)·포자감염 마킹(`SpawnMark.HasMark`)의 시각적 표시(아이콘, 오버레이 등) — 지금은 상태값만 존재하고 카드 위에 드러나지 않는다. 상태를 눈으로 확인하려면 로그나 디버거에 의존해야 한다(요청자 확인 후 아트 리소스가 준비되면 후속 문서에서 추가).
 - 컴퓨터 측 카드가 능력을 발동하는 경우 — 컴퓨터가 아직 실제로 필드에 카드를 놓지 않는다(기존 제외 범위 유지). 2번 결정의 필드 범위 상수(유저 고정)를 `TurnOwner` 기준으로 바꾸는 일반화는 컴퓨터 배치 문서에서 함께 처리한다.
 - 1004(`target=All`)/1019(`target=Any`) 이종 합체 판정, 드래그 중 병합 가능 슬롯 초록 하이라이트 미리보기 — [친구카드 합체 계획](plan-ingame-merge.md)에서 다룸.
 - 1012(`sheets=15`) 반영 — `DeckBuilder.Build`가 카드마다 고정 10장 대신 `CardTableData.sheets`를 쓰도록 바꾸는 일은 전투 능력이 아니라 덱 구성 문제라 범위 밖.
@@ -734,7 +741,7 @@ Assets/
 | `heal+n` 대상이 이미 `MaxHp`에 근접해 `n`을 다 못 채움 | `Heal`이 `Mathf.Min(MaxHp, ...)`으로 자동으로 자름 |
 | `MultiplierMerge` 키워드가 없는 카드에 배수 로직이 적용되는지 | `EffectClauses`에 그 키워드가 있을 때만 배수 — 카드 key와 무관하게 데이터로만 판정, 그 외엔 기존 단순 합산 그대로 |
 | `cond=Die`(1018)인 카드가 이미 한 번 부활한 뒤 다시 사망 | `HasRevived == true`라 `TryRevive()`가 `false` 반환 → 일반 사망 처리로 진행(포자감염 마킹 여부만 추가 확인 후 제거) |
-| 포자감염(1010)으로 마킹된 대상이 부활 카드(1018)인 경우 | `HasSpawnMark`(포자감염 예약)와 `cond=Die`(부활)는 서로 다른 트리거라 함께 걸릴 수 있다 — `TryHandleDeath`는 `cond=Die` 부활을 먼저 시도하고, 부활에 성공하면 그 자리에서 `return true`하므로 포자감염 마킹은 그 시점엔 소비되지 않고 남아있는다(다음에 진짜로 죽을 때 스폰) |
+| 포자감염(1010)으로 마킹된 대상이 부활 카드(1018)인 경우 | `SpawnMark.HasMark`(포자감염 예약)와 `cond=Die`(부활)는 서로 다른 트리거라 함께 걸릴 수 있다 — `TryHandleDeath`는 `cond=Die` 부활을 먼저 시도하고, 부활에 성공하면 그 자리에서 `return true`하므로 포자감염 마킹은 그 시점엔 소비되지 않고 남아있는다(다음에 진짜로 죽을 때 스폰) |
 | `CardTable.csv`의 `effect`에 오타/미지원 문법을 넣은 행(예: `Att%2`, `spawn1010`처럼 형식이 깨짐) | `CardEffectParser.Parse`가 어떤 패턴에도 매칭 안 되면 `LogError` 후 그 조각을 버림 — 나머지 정상 조각은 그대로 적용되고, CSV 편집 후에는 항상 콘솔에서 이 로그가 없는지 확인 |
 | `effect`가 완전히 빈 문자열이거나 `cond≠Merge` | `EffectClauses`가 빈 리스트이거나 `TriggerMergeAbility`가 `cond` 확인에서 조기 반환 — 둘 다 아무 일도 일어나지 않음 |
 | `CardTable.Instance.Get(existing.Key)`가 `null`(테이블에 없는 key) | 기존 관례(합체 계획 등)와 동일하게 방어 코드 없이 신뢰 |
@@ -785,7 +792,7 @@ Assets/
 - [x] `CardTable.cs`: `CardCondition.Die`, `CardStat`, `CardEffectClauseKind`, `CardEffectClause`, `CardEffectParser`, `CardAbilityScope`(7종) 추가, `CardTableData.animal`/`.sheets`/`.effect`/`.scope`/`.EffectClauses` 필드 추가, `CardTable.OnLoaded()` 오버라이드 추가
 - [x] `CardTable.csv`: `effect`/`scope` 컬럼 추가, 20종 전체에 값 채움("능력 분류" 표 기준 — cond=Except/None 카드도 `None`으로 명시)
 - [x] `BaseStone.cs`: `Heal(int)` 추가
-- [x] `Friend.cs`: `MaxHp`/`HasShield`/`HasRevived`/`HasSpawnMark`류, `AddAtt`/`MultiplyAtt`/`DivideAtt`/`AddHp`/`Heal`/`MultiplyHp`/`DivideHp`/`HealToMax`/`AddShield`/`ApplySpawnMark`/`TryRevive`/`OverrideStats` 추가, `SetKey`/`TakeDamage`/`MergeWith` 수정
+- [x] `Friend.cs`: `MaxHp`/`HasShield`/`HasRevived`/`SpawnMark`(`SpawnMarkInfo` 중첩 클래스)류, `AddAtt`/`MultiplyAtt`/`DivideAtt`/`AddHp`/`Heal`/`MultiplyHp`/`DivideHp`/`HealToMax`/`AddShield`/`ApplySpawnMark`/`TryRevive`/`OverrideStats` 추가, `SetKey`/`TakeDamage`/`MergeWith` 수정
 - [x] `InGameSceneManager.cs`: `GetFieldFriends`/`PickRandomTargetable`/`TriggerMergeAbility`/`ApplyClausesToFriend`/`ApplyClausesToBase`/`TryHandleDeath`/`SpawnFriendDirectly` 추가, `MergeCardIntoSlot`에 `MultiplierMerge` 키워드 기반 배수 반영 + `TriggerMergeAbility` 호출 연결
 - [x] `plan-ingame-attack.md`의 `ResolveAttackRoutine`을 `TryHandleDeath` 호출로 확장(1010/1018 실제 동작에 필요) — 해당 문서에도 변경 기록
 - [x] `CardTable.csv` → `CardTable.asset` 재생성 — 실제 Play 모드 테스트로 확인됨
