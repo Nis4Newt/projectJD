@@ -645,8 +645,8 @@ namespace JungleDice.InGame
                 }
             }
 
-            bool hasSpawnMark = friend.HasSpawnMark;
-            int spawnKey = friend.SpawnMarkKey, spawnAtt = friend.SpawnMarkAtt, spawnHp = friend.SpawnMarkHp;
+            bool hasSpawnMark = friend.SpawnMark.HasMark;
+            int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
             Destroy(friend.gameObject);
             if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
             return false;

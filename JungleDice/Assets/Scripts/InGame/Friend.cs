@@ -23,10 +23,23 @@ namespace JungleDice.InGame
         public bool IsDead => CurrentHp <= 0;
 
         // 사망 시 새 카드를 낳는 예약(부활/포자감염 공용) — key/att/hp는 spawn+key,att=n,hp=n 조각에서 옴
-        public bool HasSpawnMark { get; private set; }
-        public int SpawnMarkKey { get; private set; }
-        public int SpawnMarkAtt { get; private set; }
-        public int SpawnMarkHp { get; private set; }
+        public SpawnMarkInfo SpawnMark { get; } = new SpawnMarkInfo();
+
+        public class SpawnMarkInfo
+        {
+            public bool HasMark { get; private set; }
+            public int Key { get; private set; }
+            public int Att { get; private set; }
+            public int Hp { get; private set; }
+
+            public void Set(int key, int att, int hp)
+            {
+                HasMark = true;
+                Key = key;
+                Att = att;
+                Hp = hp;
+            }
+        }
 
         public void SetKey(int key)
         {
@@ -154,13 +167,7 @@ namespace JungleDice.InGame
 
         public void AddShield() => HasShield = true; // 이미 있어도 그대로 유지(스택 없음)
 
-        public void ApplySpawnMark(int key, int att, int hp)
-        {
-            HasSpawnMark = true;
-            SpawnMarkKey = key;
-            SpawnMarkAtt = att;
-            SpawnMarkHp = hp;
-        }
+        public void ApplySpawnMark(int key, int att, int hp) => SpawnMark.Set(key, att, hp);
 
         // 사망 시 1회 부활(CardCondition.Die) — att/hp는 자신의 effect(spawn+key,att=n,hp=n)에서 읽어온 값
         public bool TryRevive(int att, int hp)
