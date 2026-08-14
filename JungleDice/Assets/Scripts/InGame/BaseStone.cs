@@ -21,5 +21,11 @@ namespace JungleDice.InGame
             CurrentHp = Mathf.Max(0, CurrentHp - amount);
             _hpText.text = CurrentHp.ToString();
         }
+
+        public void Heal(int amount)
+        {
+            CurrentHp = Mathf.Min(_maxHp, CurrentHp + amount);
+            _hpText.text = CurrentHp.ToString();
+        }
     }
 }

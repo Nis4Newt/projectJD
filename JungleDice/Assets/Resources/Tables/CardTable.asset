@@ -14,80 +14,242 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::JungleDice.Data.Table.CardTable
   _rows:
   - key: 1000
+    animal: "\uCF54\uB07C\uB9AC"
     cardname: "\uB300\uC9C0\uC758 \uC655"
+    sheets: 10
     att: 2
     hp: 2
     cond: 1
     target: 0
-    explain: "\uB0B4 \uBB34\uC791\uC704 \uCE5C\uAD6C \uACF5 2\uBC30"
+    effect: Att*2
+    scope: 2
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uD544\uB4DC\uC758
+      \uBB34\uC791\uC704 \uCE5C\uAD6C \uACF5\uACA9\uB825 2\uBC30"
   - key: 1001
+    animal: "\uAC70\uBBF8"
     cardname: "9\uAC1C\uC758 \uB2E4\uB9AC"
+    sheets: 10
     att: 2
     hp: 2
     cond: 1
     target: 0
+    effect: Att/2,Hp/2
+    scope: 4
     explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uC0C1\uB300
-      \uBB34\uC791\uC704 \uC720\uB2DB \uD558\uB098\uC758 \uB2A5\uB825\uCE58\uAC00
-      \uC808\uBC18\uC774 \uB429\uB2C8\uB2E4."
+      \uD544\uB4DC\uC758 \uBB34\uC791\uC704 \uCE5C\uAD6C\uC758 \uB2A5\uB825\uCE58\uAC00
+      \uC808\uBC18"
   - key: 1002
+    animal: "\uAC1C\uAD6C\uB9AC"
     cardname: "\uB2AA\uC9C0\uC758 \uC1A1\uACF3\uB2C8"
+    sheets: 10
     att: 2
     hp: 2
     cond: 1
     target: 0
+    effect: dmg+2
+    scope: 7
     explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uC0C1\uB300
-      \uD50C\uB808\uC774\uC5B4\uC5D0\uAC8C 2\uC758 \uB370\uBBF8\uC9C0\uB97C \uC90D\uB2C8\uB2E4."
+      \uBAA8\uD5D8\uAC00\uC5D0\uAC8C 2\uC758 \uB370\uBBF8\uC9C0"
   - key: 1003
+    animal: "\uB3C5\uC218\uB9AC"
     cardname: "\uB545\uC758 \uADF8\uB9BC\uC790"
+    sheets: 10
     att: 2
     hp: 2
     cond: 2
     target: 0
+    effect: None
+    scope: 0
     explain: "\uC774 \uCE5C\uAD6C\uB294 \uB2A5\uB825\uC758 \uB300\uC0C1\uC774 \uB418\uC9C0
       \uC54A\uC2B5\uB2C8\uB2E4."
   - key: 1004
+    animal: "\uBE14\uB8E8\uBCA0\uB9AC"
     cardname: "\uD30C\uB780 \uB538\uAE30"
-    att: 2
-    hp: 2
+    sheets: 10
+    att: 1
+    hp: 1
     cond: 0
     target: 1
-    explain: "\uBAA8\uB4E0 \uC885\uB958\uC758 \uCE5C\uAD6C\uC640 \uD569\uCE60 \uC218
-      \uC788\uC2B5\uB2C8\uB2E4."
+    effect: None
+    scope: 0
+    explain: "\uBAA8\uB4E0 \uC885\uB958\uC758 \uCE5C\uAD6C\uC5D0 \uD569\uCCD0\uC9C8
+      \uC218 \uC788\uC2B5\uB2C8\uB2E4."
   - key: 1005
+    animal: "\uBC15\uC950"
     cardname: "\uC6B4\uBC18\uC790"
+    sheets: 10
     att: 2
     hp: 2
     cond: 1
     target: 0
+    effect: dmg+1
+    scope: 4
     explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uC0C1\uB300
-      \uBB34\uC791\uC704 \uCE5C\uAD6C\uC5D0\uAC8C 1\uC758 \uB370\uBBF8\uC9C0\uB97C
-      \uC90D\uB2C8\uB2E4."
+      \uD544\uB4DC\uC758 \uBB34\uC791\uC704 \uCE5C\uAD6C\uC5D0\uAC8C 1\uC758 \uB370\uBBF8\uC9C0"
   - key: 1006
+    animal: "\uACE0\uB798"
     cardname: "\uBC14\uB2E4\uC758 \uC218\uD638\uC790"
+    sheets: 10
     att: 2
     hp: 2
     cond: 1
     target: 0
+    effect: heal+2
+    scope: 6
     explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uBAA8\uD5D8\uAC00\uC758
-      \uC0DD\uBA85\uB825\uC744 2 \uD68C\uBCF5\uD569\uB2C8\uB2E4."
+      \uC0DD\uBA85\uB825\uC744 2 \uD68C\uBCF5"
   - key: 1007
+    animal: "\uAC70\uBD81\uC774"
     cardname: "\uBB3C\uB801\uD55C \uB3CC"
+    sheets: 10
     att: 2
     hp: 2
     cond: 1
     target: 0
-    explain: "\uD569\uCCD0\uC9C8\uB54C \uCC9C\uBCF4"
+    effect: Shield
+    scope: 1
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uACF5\uACA9\uC744
+      1\uD68C \uBC29\uC5B4"
   - key: 1008
+    animal: "\uCF54\uBFD4\uC18C"
     cardname: "\uBFD4\uB2EC\uB9B0 \uB9D0"
+    sheets: 10
     att: 4
     hp: 1
     cond: 0
     target: 0
-    explain: "\uB2A5\uB825X"
+    effect: None
+    scope: 0
+    explain: "\uB192\uC740 \uACF5\uACA9\uB825"
   - key: 1009
+    animal: "\uBC14\uC624\uBC25\uB098\uBB34"
     cardname: "\uC544\uB97C\uB77C\uC2A4"
+    sheets: 10
+    att: 3
+    hp: 3
+    cond: 1
+    target: 0
+    effect: Hp*2
+    scope: 2
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uD544\uB4DC\uC758
+      \uBB34\uC791\uC704 \uCE5C\uAD6C \uCCB4\uB825 2\uBC30"
+  - key: 1010
+    animal: "\uBC84\uC12F"
+    cardname: "\uAC00\uC9DC \uD480"
+    sheets: 10
     att: 2
     hp: 2
     cond: 1
     target: 0
-    explain: "\uB0B4 \uBB34\uC791\uC704 \uCE5C\uAD6C \uC0DD 2\uBC30"
+    effect: spawn+1010,att=2,hp=2
+    scope: 2
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uD544\uB4DC\uC758
+      \uBB34\uC791\uC704 \uCE5C\uAD6C\uC5D0\uAC8C \uD3EC\uC790\uAC10\uC5FC : \uC8FD\uC740
+      \uC790\uB9AC\uC5D0 \uBC84\uC12F \uC0DD\uC131"
+  - key: 1011
+    animal: "\uAE4C\uB9C8\uADC0"
+    cardname: "\uD770\uBA38\uB9AC"
+    sheets: 10
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    effect: MultiplierMerge
+    scope: 0
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uD544\uB4DC\uC5D0
+      \uAC19\uC740 \uCE5C\uAD6C \uC218 \uB9CC\uD07C \uACF1\uD574\uC11C \uBA38\uC9C0"
+  - key: 1012
+    animal: "\uB098\uBE44"
+    cardname: "\uBB34\uB9AC \uC5B4\uBBF8"
+    sheets: 15
+    att: 1
+    hp: 1
+    cond: 0
+    target: 0
+    effect: None
+    scope: 0
+    explain: "\uC774 \uCE5C\uAD6C\uB294 15\uC7A5\uC774 \uB4E4\uC5B4\uAC11\uB2C8\uB2E4."
+  - key: 1013
+    animal: "\uC5FC\uC18C"
+    cardname: "\uB4A4\uC9D1\uD78C \uBCC4"
+    sheets: 10
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    effect: Att+1
+    scope: 3
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uD544\uB4DC
+      \uC804\uCCB4 \uACF5\uACA9\uB825 +1"
+  - key: 1014
+    animal: "\uACE0\uB9B4\uB77C"
+    cardname: "\uAC80\uC740 \uAC70\uC778"
+    sheets: 10
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    effect: dmg+1
+    scope: 5
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uC0C1\uB300
+      \uD544\uB4DC \uC804\uCCB4\uC5D0 1\uC758 \uB370\uBBF8\uC9C0"
+  - key: 1015
+    animal: "\uB2EC\uD33D\uC774"
+    cardname: "\uB8E8 \uCE74\uB974\uCF5C"
+    sheets: 5
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    effect: Shield
+    scope: 3
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uD544\uB4DC
+      \uC804\uCCB4 \uBC29\uC5B4 1\uD68C"
+  - key: 1016
+    animal: "\uD574\uD30C\uB9AC"
+    cardname: "\uD45C\uB958 \uC7BC"
+    sheets: 10
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    effect: Hp+1
+    scope: 3
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uD544\uB4DC
+      \uC804\uCCB4 \uCCB4\uB825 +1"
+  - key: 1017
+    animal: "\uC624\uB9AC"
+    cardname: "\uBBF8\uC6B4 \uBC31\uC870"
+    sheets: 10
+    att: 2
+    hp: 2
+    cond: 1
+    target: 0
+    effect: heal+max
+    scope: 2
+    explain: "\uAC19\uC740 \uCE5C\uAD6C\uC640 \uD569\uCCD0\uC9C8\uB54C \uB0B4 \uD544\uB4DC\uC758
+      \uBB34\uC791\uC704 \uCE5C\uAD6C \uCCB4\uB825\uC744 \uCD5C\uB300\uCE58\uAE4C\uC9C0
+      \uD68C\uBCF5"
+  - key: 1018
+    animal: "\uACE0\uC0AC\uB9AC"
+    cardname: "\uAC19\uC740 \uC190"
+    sheets: 10
+    att: 2
+    hp: 2
+    cond: 3
+    target: 0
+    effect: spawn+1018,att=1,hp=1
+    scope: 0
+    explain: "\uC0AC\uB9DD \uC2DC 1/1\uB85C 1\uD68C \uBD80\uD65C"
+  - key: 1019
+    animal: "\uD558\uC774\uC5D0\uB098"
+    cardname: "\uC774\uBE68 \uB8F0\uB81B"
+    sheets: 10
+    att: 2
+    hp: 2
+    cond: 0
+    target: 2
+    effect: None
+    scope: 0
+    explain: "\uBAA8\uB4E0 \uC885\uB958\uC758 \uCE5C\uAD6C\uB97C \uC7A1\uC544\uBA39\uC744
+      \uC218 \uC788\uC74C (\uB2A5\uB825 \uBC1C\uB3D9 \uC548\uB428)"

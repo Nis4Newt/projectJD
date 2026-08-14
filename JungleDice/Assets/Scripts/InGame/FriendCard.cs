@@ -71,6 +71,8 @@ namespace JungleDice.InGame
 
             transform.SetParent(_dragLayer, worldPositionStays: true); // 자기 슬롯 밖으로 — 즉시 hand에서 빠짐(슬롯은 빈 채로 남음, 다른 카드가 채우지 않음)
             transform.SetAsLastSibling(); // 다른 UI보다 위에 그려지도록
+
+            InGameSceneManager.Instance.ShowMergePreview(Key);
         }
 
         public void OnDrag(PointerEventData eventData)
@@ -83,6 +85,8 @@ namespace JungleDice.InGame
         public void OnEndDrag(PointerEventData eventData)
         {
             _canvasGroup.blocksRaycasts = true;
+            InGameSceneManager.Instance.HideMergePreview(); // 드롭 성공/실패와 무관하게 항상 호출
+
             if (_wasPlaced) return; // 필드 배치 성공 — 이번 프레임 안에 파괴 예정, 되돌릴 필요 없음
 
             AttachToSlot(_homeSlot); // 드롭 실패 — 원래 있던 자기 슬롯으로 즉시 복귀
