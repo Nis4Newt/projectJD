@@ -70,6 +70,9 @@ namespace JungleDice.InGame
         private FieldSlot _attackerSlot; // 이번 턴에 뽑힌 공격자 슬롯, 비어있으면 null
         private bool _userWon; // GameOver 직전에 세팅, OnGameStateChanged(GameOver)에서 읽음
 
+        private readonly List<int> _userGraveyard = new();
+        private readonly List<int> _computerGraveyard = new();
+
         public bool CanPlayFriend => _currentOwner == TurnOwner.User && _currentPhase == TurnPhase.PlayFriend;
 
         protected override void OnAwake()
@@ -220,6 +223,15 @@ namespace JungleDice.InGame
         private FieldSlot GetFieldSlot(int rollValue) => _fieldSlots[rollValue - 1];
 
         private BaseStone GetBase(int slotIndex) => slotIndex <= 3 ? _computerBase : _userBase;
+
+        // slotIndex(필드 절대 번호 1~6)로 소유 진영을 판정해 그 진영의 무덤에 key를 저장한다 — GetBase와 동일한 기준(1~3 컴퓨터, 4~6 유저)
+        private void AddToGraveyard(int slotIndex, int key)
+        {
+            var graveyard = slotIndex <= 3 ? _computerGraveyard : _userGraveyard;
+            graveyard.Add(key);
+        }
+
+        public IReadOnlyList<int> GetGraveyard(TurnOwner owner) => owner == TurnOwner.User ? _userGraveyard : _computerGraveyard;
 
         // RollAttacker에서 공격자가 없으면 이 코루틴 자체가 시작되지 않으므로, _attackerSlot은 항상 점유된 슬롯이다.
         private IEnumerator ResolveAttackRoutine(FieldSlot targetSlot)
@@ -613,7 +625,11 @@ namespace JungleDice.InGame
                 }
             }
 
-            if (target.IsDead) Destroy(target.gameObject);
+            if (target.IsDead)
+            {
+                AddToGraveyard(target.transform.parent.GetComponent<FieldSlot>().Index, target.Key);
+                Destroy(target.gameObject);
+            }
         }
 
         // BaseStone 대상 — 피해/회복만 의미가 있다(Att, 스폰 등은 본체를 대상으로 하는 카드가 없어 무시)
@@ -647,6 +663,7 @@ namespace JungleDice.InGame
 
             bool hasSpawnMark = friend.SpawnMark.HasMark;
             int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
+            AddToGraveyard(slotTransform.GetComponent<FieldSlot>().Index, friend.Key);
             Destroy(friend.gameObject);
             if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
             return false;
