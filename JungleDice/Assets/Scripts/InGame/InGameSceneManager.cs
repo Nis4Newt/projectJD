@@ -245,6 +245,18 @@ namespace JungleDice.InGame
 
         public IReadOnlyList<int> GetGraveyard(TurnOwner owner) => owner == TurnOwner.User ? _userGraveyard : _computerGraveyard;
 
+        // 본체 체력이 0 이하가 되면 승패를 확정하고 GameOver로 전이한다 — 전투 피해(ResolveAttackRoutine)와
+        // 능력 피해(ApplyClausesToBase, 예: 개구리의 EnemyBase dmg)가 이 판정을 공유한다.
+        private bool TryEndGameIfBaseDestroyed(BaseStone destroyedBase)
+        {
+            if (destroyedBase.CurrentHp > 0) return false;
+
+            _userWon = destroyedBase == _computerBase; // 컴퓨터 본체가 파괴되면 유저 승리
+            Debug.Log($"[InGame] {(destroyedBase == _computerBase ? "Computer" : "User")} 본체 파괴 — {(_userWon ? "승리" : "패배")}");
+            GameManager.Instance.ChangeState(GameState.GameOver);
+            return true;
+        }
+
         // RollAttacker에서 공격자가 없으면 이 코루틴 자체가 시작되지 않으므로, _attackerSlot은 항상 점유된 슬롯이다.
         private IEnumerator ResolveAttackRoutine(FieldSlot targetSlot)
         {
@@ -329,13 +341,8 @@ namespace JungleDice.InGame
                 }
             }
 
-            if (targetFriend == null && GetBase(targetSlot.Index).CurrentHp <= 0)
-            {
-                _userWon = targetSlot.Index <= 3; // 컴퓨터(1~3) 본체가 파괴되면 유저 승리
-                Debug.Log($"[InGame] {(targetSlot.Index <= 3 ? "Computer" : "User")} 본체 파괴 — {(_userWon ? "승리" : "패배")}");
-                GameManager.Instance.ChangeState(GameState.GameOver);
+            if (targetFriend == null && TryEndGameIfBaseDestroyed(GetBase(targetSlot.Index)))
                 yield break; // 턴 교대 없이 종료
-            }
 
             yield return SwitchTurnAfterDelay();
         }
@@ -735,6 +742,8 @@ namespace JungleDice.InGame
                     case CardEffectClauseKind.Heal: target.Heal(clause.Value); break;
                 }
             }
+
+            TryEndGameIfBaseDestroyed(target);
         }
 
         // 사망 확정된 Friend를 부활/포자감염 규칙에 따라 처리한다. true를 반환하면 부활 성공 — 파괴하지 않고 필드에 남긴다.
