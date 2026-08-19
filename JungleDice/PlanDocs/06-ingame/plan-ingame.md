@@ -77,7 +77,7 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 - [x] [plan-ingame-attack.md](plan-ingame-attack.md) 구현
 - [ ] [plan-ingame-result.md](plan-ingame-result.md) 구현
 - [ ] [plan-ingame-merge.md](plan-ingame-merge.md) 구현
-- [ ] (추후) 컴퓨터 핸드/필드(1/2/3번) 별도 계획 문서
+- [ ] [plan-ingame-computer-ai.md](plan-ingame-computer-ai.md) — 컴퓨터 핸드/필드(1/2/3번) 배치를 규칙 기반 알고리즘(1/2/3그룹)으로 결정하는 후속 계획 문서
 - [ ] [plan-ingame-ability.md](plan-ingame-ability.md) — `CardCondition`/`CardTarget` 발동 효과·이종 합체를 다루는 후속 계획 문서
 - [ ] (추후) 컴퓨터 진영 결과 위젯
 - [ ] (추후) `GameType.Battle` 모드의 InGame 로직 별도 계획 문서
