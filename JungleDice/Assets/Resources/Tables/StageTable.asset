@@ -16,24 +16,16 @@ MonoBehaviour:
   - key: 1
     icon: a
     hp: 20
-    friend1: 1000
-    friend2: 1001
-    friend3: 1002
+    friends: e8030000e9030000ea030000
   - key: 2
     icon: a
     hp: 25
-    friend1: 1001
-    friend2: 1003
-    friend3: 1005
+    friends: e9030000eb030000ed030000
   - key: 3
     icon: a
     hp: 30
-    friend1: 1002
-    friend2: 1005
-    friend3: 1008
+    friends: ea030000ed030000f0030000
   - key: 4
     icon: a
     hp: 35
-    friend1: 1003
-    friend2: 1008
-    friend3: 1009
+    friends: eb030000f0030000f1030000
