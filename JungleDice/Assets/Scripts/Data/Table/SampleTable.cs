@@ -16,6 +16,13 @@ namespace JungleDice.Data.Table
 
     public class SampleTable : TableBase<SampleTable, SampleTableData, int>
     {
+        protected override SampleTableData ParseRow(TableRow row) => new()
+        {
+            id = row.Get<int>("id"),
+            name = row.Get<string>("name"),
+            value = row.Get<int>("value"),
+        };
+
         // 단순 key 조회 — protected 인덱서를 그대로 감싸기만 함
         public SampleTableData Get(int id) => this[id];
 

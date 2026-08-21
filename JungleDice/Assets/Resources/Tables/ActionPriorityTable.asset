@@ -15,28 +15,28 @@ MonoBehaviour:
   _rows:
   - ai: 1
     player: 0
-    priority: Fill,Shield,AdvGrowth,AdvHeal,EnemyWeaken,EnemyFieldDmg,Special,EnemyBaseDmg,FieldHeal,AllyGrowth,SoloGrowth
+    priority: 00000000010000000200000003000000090000000a0000000700000008000000040000000500000006000000
   - ai: 2
     player: 0
-    priority: AdvGrowth,AdvHeal,EnemyWeaken,Special,EnemyFieldDmg,Fill,EnemyBaseDmg,FieldHeal,Shield,AllyGrowth,SoloGrowth
+    priority: 020000000300000009000000070000000a000000000000000800000004000000010000000500000006000000
   - ai: 1
     player: 1
-    priority: Fill,Shield,AdvGrowth,AdvHeal,EnemyBaseDmg,EnemyWeaken,EnemyFieldDmg,Special,FieldHeal,AllyGrowth,SoloGrowth
+    priority: 0000000001000000020000000300000008000000090000000a00000007000000040000000500000006000000
   - ai: 1
     player: 2
-    priority: Fill,Shield,EnemyBaseDmg,AdvGrowth,AdvHeal,EnemyWeaken,EnemyFieldDmg,Special,FieldHeal,AllyGrowth,SoloGrowth
+    priority: 0000000001000000080000000200000003000000090000000a00000007000000040000000500000006000000
   - ai: 2
     player: 1
-    priority: EnemyWeaken,AdvGrowth,AdvHeal,EnemyBaseDmg,Fill,EnemyFieldDmg,Special,FieldHeal,Shield,AllyGrowth,SoloGrowth
+    priority: 09000000020000000300000008000000000000000a0000000700000004000000010000000500000006000000
   - ai: 2
     player: 2
-    priority: EnemyBaseDmg,EnemyWeaken,AdvGrowth,AdvHeal,Fill,EnemyFieldDmg,Special,FieldHeal,Shield,AllyGrowth,SoloGrowth
+    priority: 08000000090000000200000003000000000000000a0000000700000004000000010000000500000006000000
   - ai: 0
     player: 1
-    priority: Fill,EnemyWeaken,EnemyFieldDmg,AllyGrowth,SoloGrowth,EnemyBaseDmg,Special,AdvGrowth,AdvHeal,FieldHeal,Shield
+    priority: 00000000090000000a0000000500000006000000080000000700000002000000030000000400000001000000
   - ai: 0
     player: 2
-    priority: EnemyBaseDmg,Fill,EnemyWeaken,EnemyFieldDmg,AllyGrowth,SoloGrowth,Special,AdvGrowth,AdvHeal,FieldHeal,Shield
+    priority: 0800000000000000090000000a00000005000000060000000700000002000000030000000400000001000000
   - ai: 0
     player: 0
-    priority: AllyGrowth,SoloGrowth,Shield,EnemyBaseDmg,Fill,EnemyWeaken,EnemyFieldDmg,Special,AdvGrowth,AdvHeal,FieldHeal
+    priority: 0500000006000000010000000800000000000000090000000a00000007000000020000000300000004000000

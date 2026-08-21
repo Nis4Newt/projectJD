@@ -10,17 +10,21 @@ namespace JungleDice.Data.Table
         public int key;
         public string icon;
         public int hp;
-        public int friend1;
-        public int friend2;
-        public int friend3;
-
-        [NonSerialized] public int[] friends;
+        public int[] friends;
 
         public override int Key => key;
     }
 
     public class StageTable : TableBase<StageTable, StageTableData, int>
     {
+        protected override StageTableData ParseRow(TableRow row) => new()
+        {
+            key = row.Get<int>("key"),
+            icon = row.Get<string>("icon"),
+            hp = row.Get<int>("hp"),
+            friends = new[] { row.Get<int>("friend1"), row.Get<int>("friend2"), row.Get<int>("friend3") },
+        };
+
         // 없는 key면 LogError 후 null 반환 — 예외로 죽지 않도록 TryGet 경유
         public StageTableData Get(int key)
         {
@@ -60,12 +64,6 @@ namespace JungleDice.Data.Table
             }
             Debug.LogError($"[Table] {nameof(StageTable)} key 없음: {key}");
             return 0;
-        }
-
-        protected override void OnLoaded()
-        {
-            foreach (var row in Rows)
-                row.friends = new[] { row.friend1, row.friend2, row.friend3 };
         }
     }
 }

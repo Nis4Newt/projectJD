@@ -1,13 +1,11 @@
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using UnityEngine;
 
 namespace JungleDice.Core.Table
 {
     public abstract class TableBase<TSelf, TData, TKey> : TableAssetBase
         where TSelf : TableBase<TSelf, TData, TKey>
-        where TData : TableDataBase<TKey>, new()
+        where TData : TableDataBase<TKey>
     {
         [SerializeField] private List<TData> _rows = new();
 
@@ -21,6 +19,8 @@ namespace JungleDice.Core.Table
 
         protected virtual void OnLoaded() { }
 
+        protected abstract TData ParseRow(TableRow row);
+
         private Dictionary<TKey, TData> Map => _map ??= BuildMap();
 
         private Dictionary<TKey, TData> BuildMap()
@@ -33,25 +33,12 @@ namespace JungleDice.Core.Table
 
         public override void PopulateFromText(string[] headers, List<string[]> rows)
         {
-            var fields = typeof(TData).GetFields(BindingFlags.Public | BindingFlags.Instance);
             var newRows = new List<TData>(rows.Count);
             var seenKeys = new HashSet<TKey>();
 
             foreach (var cols in rows)
             {
-                var data = new TData();
-                for (int i = 0; i < headers.Length && i < cols.Length; i++)
-                {
-                    var field = Array.Find(fields, f => f.Name.Equals(headers[i], StringComparison.OrdinalIgnoreCase));
-                    if (field == null) continue;
-
-                    if (!TableValueParser.TryParse(field.FieldType, cols[i], out var value))
-                    {
-                        Debug.LogError($"[Table] {typeof(TData).Name}.{field.Name} 파싱 실패: '{cols[i]}'");
-                        continue;
-                    }
-                    field.SetValue(data, value);
-                }
+                var data = ParseRow(new TableRow(headers, cols));
 
                 if (!seenKeys.Add(data.Key))
                     Debug.LogError($"[Table] {typeof(TSelf).Name} 중복 key 발견: {data.Key}");

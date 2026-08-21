@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using JungleDice.Core.Table;
 using UnityEngine;
@@ -36,7 +35,7 @@ namespace JungleDice.Data.Table
     {
         public UrgencyState ai;
         public UrgencyState player;
-        public string priority; // AbilityPriorityCategory를 ','로 이어붙인 문자열(1순위부터 11순위까지) — GetPriority가 파싱해서 캐시한다
+        public AbilityPriorityCategory[] priority; // 1순위부터 11순위까지 순서대로 — ParseRow가 CSV의 ','구분 문자열을 파싱해 채운다
 
         public override string Key => $"{ai}_{player}";
     }
@@ -45,24 +44,30 @@ namespace JungleDice.Data.Table
     // 원본: Assets/Tables/Source/ActionPriorityTable.csv
     public class ActionPriorityTable : TableBase<ActionPriorityTable, ActionPriorityTableData, string>
     {
-        private Dictionary<string, AbilityPriorityCategory[]> _parsedPriorityCache;
-
-        protected override void OnLoaded()
+        protected override ActionPriorityTableData ParseRow(TableRow row) => new()
         {
-            _parsedPriorityCache = Rows.ToDictionary(row => row.Key, ParsePriority);
-        }
+            ai = row.Get<UrgencyState>("ai"),
+            player = row.Get<UrgencyState>("player"),
+            priority = ParsePriority(row.Get<string>("priority")),
+        };
 
-        private static AbilityPriorityCategory[] ParsePriority(ActionPriorityTableData row) =>
-            row.priority.Split(',')
+        // "priority" 컬럼은 한 셀 안에 ','로 여러 값이 들어있는 형태라 TableValueParser/TableRow의 범용 파싱 범위 밖 — 직접 분리
+        private static AbilityPriorityCategory[] ParsePriority(string raw)
+        {
+            // raw는 컬럼이 없거나 파싱 실패 시 null일 수 있음(TableRow.Get이 이미 LogError를 남김) — 임포트를 막지 않도록 빈 배열로 처리
+            if (string.IsNullOrEmpty(raw)) return Array.Empty<AbilityPriorityCategory>();
+
+            return raw.Split(',')
                 .Select(token => (AbilityPriorityCategory)Enum.Parse(typeof(AbilityPriorityCategory), token.Trim(), true))
                 .ToArray();
+        }
 
         // (ai, player) 조합에 대한 1~11순위 카테고리 배열 — 문서의 순위 매트릭스 조회와 동일한 키
         public AbilityPriorityCategory[] GetPriority(UrgencyState ai, UrgencyState player)
         {
             var key = $"{ai}_{player}";
-            if (_parsedPriorityCache != null && _parsedPriorityCache.TryGetValue(key, out var priority))
-                return priority;
+            if (TryGet(key, out var data))
+                return data.priority;
 
             Debug.LogError($"[Table] {nameof(ActionPriorityTable)} 조합 없음: ai={ai}, player={player}");
             return Array.Empty<AbilityPriorityCategory>();
