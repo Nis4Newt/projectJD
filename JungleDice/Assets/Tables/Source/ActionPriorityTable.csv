@@ -1,0 +1,10 @@
+ai|player|priority
+FieldExposure|None|Fill,Shield,AdvGrowth,AdvHeal,EnemyWeaken,EnemyFieldDmg,Special,EnemyBaseDmg,FieldHeal,AllyGrowth,SoloGrowth
+DirectAttackThreat|None|AdvGrowth,AdvHeal,EnemyWeaken,Special,EnemyFieldDmg,Fill,EnemyBaseDmg,FieldHeal,Shield,AllyGrowth,SoloGrowth
+FieldExposure|FieldExposure|Fill,Shield,AdvGrowth,AdvHeal,EnemyBaseDmg,EnemyWeaken,EnemyFieldDmg,Special,FieldHeal,AllyGrowth,SoloGrowth
+FieldExposure|DirectAttackThreat|Fill,Shield,EnemyBaseDmg,AdvGrowth,AdvHeal,EnemyWeaken,EnemyFieldDmg,Special,FieldHeal,AllyGrowth,SoloGrowth
+DirectAttackThreat|FieldExposure|EnemyWeaken,AdvGrowth,AdvHeal,EnemyBaseDmg,Fill,EnemyFieldDmg,Special,FieldHeal,Shield,AllyGrowth,SoloGrowth
+DirectAttackThreat|DirectAttackThreat|EnemyBaseDmg,EnemyWeaken,AdvGrowth,AdvHeal,Fill,EnemyFieldDmg,Special,FieldHeal,Shield,AllyGrowth,SoloGrowth
+None|FieldExposure|Fill,EnemyWeaken,EnemyFieldDmg,AllyGrowth,SoloGrowth,EnemyBaseDmg,Special,AdvGrowth,AdvHeal,FieldHeal,Shield
+None|DirectAttackThreat|EnemyBaseDmg,Fill,EnemyWeaken,EnemyFieldDmg,AllyGrowth,SoloGrowth,Special,AdvGrowth,AdvHeal,FieldHeal,Shield
+None|None|AllyGrowth,SoloGrowth,Shield,EnemyBaseDmg,Fill,EnemyWeaken,EnemyFieldDmg,Special,AdvGrowth,AdvHeal,FieldHeal

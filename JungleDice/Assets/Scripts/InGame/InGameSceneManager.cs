@@ -64,11 +64,19 @@ namespace JungleDice.InGame
 
         private List<int> _userDeck;
         private List<int> _computerDeck;
+        private int _computerInitialDeckSize;
+
+        private const int ComputerHandSize = 4;
+        private const float ComputerActionInterval = 0.5f; // RunComputerTurnRoutine이 카드를 한 장씩 낼 때마다 두는 텀
+        private readonly List<int> _computerHand = new(); // UI 없음, PlayFriend 진입마다 ComputerHandSize까지 채움
 
         private TurnOwner _currentOwner;
         private TurnPhase _currentPhase;
         private FieldSlot _attackerSlot; // 이번 턴에 뽑힌 공격자 슬롯, 비어있으면 null
         private bool _userWon; // GameOver 직전에 세팅, OnGameStateChanged(GameOver)에서 읽음
+
+        private readonly List<int> _userGraveyard = new();
+        private readonly List<int> _computerGraveyard = new();
 
         public bool CanPlayFriend => _currentOwner == TurnOwner.User && _currentPhase == TurnPhase.PlayFriend;
 
@@ -112,6 +120,7 @@ namespace JungleDice.InGame
 
             _userDeck = DeckBuilder.Build(UserManager.Current.Friends);
             _computerDeck = DeckBuilder.Build(stageFriends);
+            _computerInitialDeckSize = _computerDeck.Count; // ComputerAI의 "예상 잔여 턴수 가중치" 정규화 기준
 
             Debug.Log($"[InGame] 유저 덱: {string.Join(", ", _userDeck)}");
             Debug.Log($"[InGame] 컴퓨터 덱: {string.Join(", ", _computerDeck)}");
@@ -135,6 +144,11 @@ namespace JungleDice.InGame
                     {
                         DrawHandCards();
                         _resultPanel.PlayMyTurnAlert();
+                    }
+                    else
+                    {
+                        RefillComputerHand();
+                        StartCoroutine(RunComputerTurnRoutine());
                     }
                     _actionButtonText.text = "roll attacker";
                     _actionButton.interactable = _currentOwner == TurnOwner.User;
@@ -179,7 +193,8 @@ namespace JungleDice.InGame
                 }
             }
 
-            if (_currentOwner == TurnOwner.Computer && phase != TurnPhase.RollTarget)
+            // PlayFriend는 RunComputerTurnRoutine이 카드를 다 낸 뒤 스스로 ComputerAdvanceAfterDelay를 시작한다(행동 수에 따라 소요 시간이 달라지므로 여기서 고정 지연으로 겹쳐 걸면 안 됨)
+            if (_currentOwner == TurnOwner.Computer && phase == TurnPhase.RollAttacker)
                 StartCoroutine(ComputerAdvanceAfterDelay(phase));
         }
 
@@ -220,6 +235,27 @@ namespace JungleDice.InGame
         private FieldSlot GetFieldSlot(int rollValue) => _fieldSlots[rollValue - 1];
 
         private BaseStone GetBase(int slotIndex) => slotIndex <= 3 ? _computerBase : _userBase;
+
+        // slotIndex(필드 절대 번호 1~6)로 소유 진영을 판정해 그 진영의 무덤에 key를 저장한다 — GetBase와 동일한 기준(1~3 컴퓨터, 4~6 유저)
+        private void AddToGraveyard(int slotIndex, int key)
+        {
+            var graveyard = slotIndex <= 3 ? _computerGraveyard : _userGraveyard;
+            graveyard.Add(key);
+        }
+
+        public IReadOnlyList<int> GetGraveyard(TurnOwner owner) => owner == TurnOwner.User ? _userGraveyard : _computerGraveyard;
+
+        // 본체 체력이 0 이하가 되면 승패를 확정하고 GameOver로 전이한다 — 전투 피해(ResolveAttackRoutine)와
+        // 능력 피해(ApplyClausesToBase, 예: 개구리의 EnemyBase dmg)가 이 판정을 공유한다.
+        private bool TryEndGameIfBaseDestroyed(BaseStone destroyedBase)
+        {
+            if (destroyedBase.CurrentHp > 0) return false;
+
+            _userWon = destroyedBase == _computerBase; // 컴퓨터 본체가 파괴되면 유저 승리
+            Debug.Log($"[InGame] {(destroyedBase == _computerBase ? "Computer" : "User")} 본체 파괴 — {(_userWon ? "승리" : "패배")}");
+            GameManager.Instance.ChangeState(GameState.GameOver);
+            return true;
+        }
 
         // RollAttacker에서 공격자가 없으면 이 코루틴 자체가 시작되지 않으므로, _attackerSlot은 항상 점유된 슬롯이다.
         private IEnumerator ResolveAttackRoutine(FieldSlot targetSlot)
@@ -305,13 +341,8 @@ namespace JungleDice.InGame
                 }
             }
 
-            if (targetFriend == null && GetBase(targetSlot.Index).CurrentHp <= 0)
-            {
-                _userWon = targetSlot.Index <= 3; // 컴퓨터(1~3) 본체가 파괴되면 유저 승리
-                Debug.Log($"[InGame] {(targetSlot.Index <= 3 ? "Computer" : "User")} 본체 파괴 — {(_userWon ? "승리" : "패배")}");
-                GameManager.Instance.ChangeState(GameState.GameOver);
+            if (targetFriend == null && TryEndGameIfBaseDestroyed(GetBase(targetSlot.Index)))
                 yield break; // 턴 교대 없이 종료
-            }
 
             yield return SwitchTurnAfterDelay();
         }
@@ -393,17 +424,9 @@ namespace JungleDice.InGame
             Destroy(card.gameObject);
         }
 
-        // 같은 종류, 또는 슬롯의 카드가 target=Any(베이스 — 무엇이든 받아줌, 예: 하이에나), 또는 낸/합칠 카드가 target=All(무엇에든 합쳐짐, 예: 블루베리)일 때 합체 가능
-        private bool CanMerge(Friend existing, int mergeKey)
-        {
-            var existingData = CardTable.Instance.Get(existing.Key);
-            var data = CardTable.Instance.Get(mergeKey);
-
-            bool sameKind = existing.Key == mergeKey;
-            bool existingAcceptsAnything = existingData.target == CardTarget.Any; // 필드 카드가 베이스 역할(하이에나류) — 어떤 카드가 와도 받아줌
-            bool mergeJoinsAnything = data.target == CardTarget.All; // 낸/합칠 카드가 무엇에든 합쳐지는 역할(블루베리류)
-            return sameKind || existingAcceptsAnything || mergeJoinsAnything;
-        }
+        // 병합 가능 판정 자체는 ComputerAI.CanMerge(key 기반, Unity 비의존)에 위임한다 — 판정 로직은 하나만 존재해야
+        // 컴퓨터 AI의 후보 탐색과 유저 드래그 배치가 항상 같은 결과를 보장한다.
+        private bool CanMerge(Friend existing, int mergeKey) => ComputerAI.CanMerge(existing.Key, mergeKey);
 
         // existing에 mergeKey 카드의 기본 스탯을 합산 + 연출 + 발동 효과. 호출 전 CanMerge로 이미 통과된 조합이라고 가정한다.
         // slotIndex는 existing이 실제로 놓인 필드 절대 번호(1~6) — "내 필드"/"상대 필드"를 이 위치 기준으로 판정한다(고정된 유저=Ally 아님, 치트로 컴퓨터 필드에서 병합해도 정확히 동작해야 함)
@@ -425,6 +448,94 @@ namespace JungleDice.InGame
             existing.MergeWith(addAtt, addHp);
             existing.PunchScale(_mergePunchScale, _mergePunchDuration);
             TriggerMergeAbility(existing, slotIndex);
+        }
+
+        // 컴퓨터 손패를 ComputerHandSize까지 채운다 — 유저의 DrawHandCardsRoutine과 동일하게 덱 앞에서부터 소비(이미 셔플됨), 화면에 그리지 않으므로 연출 없이 즉시 채움
+        private void RefillComputerHand()
+        {
+            while (_computerHand.Count < ComputerHandSize && _computerDeck.Count > 0)
+            {
+                _computerHand.Add(_computerDeck[0]);
+                _computerDeck.RemoveAt(0);
+            }
+        }
+
+        // 컴퓨터 턴 한 번에 손패 전체(0~ComputerHandSize장)를 순서대로 낸다.
+        // UrgencyState(위급 상태)는 턴 시작 시 한 번만 확인해 고정하고, 카드를 낼 때마다 달라지는 필드/손패는
+        // BuildObservation()으로 매번 새로 스냅샷을 떠 DecideNextAction에 넘긴다 — 더 이상 낼 카드가 없으면 종료.
+        // 행동 사이마다 ComputerActionInterval만큼 텀을 둬 카드가 한 장씩 나오는 게 보이게 하고,
+        // 다 낸 뒤에는 기존 PlayFriend 흐름과 동일하게 ComputerAdvanceAfterDelay로 다음 단계로 넘어간다.
+        private IEnumerator RunComputerTurnRoutine()
+        {
+            var (aiState, playerState) = ComputerAI.DetermineUrgencyStates(BuildObservation());
+            int actionCount = 0;
+
+            while (true)
+            {
+                var action = ComputerAI.DecideNextAction(BuildObservation(), aiState, playerState);
+                if (!action.HasValue) break;
+
+                Debug.Log($"[InGame] Computer 행동: key={action.Value.Key}, slot={action.Value.SlotIndex}, merge={action.Value.IsMerge}");
+                ExecuteComputerAction(action.Value);
+                actionCount++;
+
+                yield return new WaitForSeconds(ComputerActionInterval);
+            }
+
+            Debug.Log($"[InGame] Computer 턴 종료 — 이번 턴 행동 횟수: {actionCount}");
+            StartCoroutine(ComputerAdvanceAfterDelay(TurnPhase.PlayFriend));
+        }
+
+        // ComputerAI가 판단에 쓸 보드 상태 스냅샷 — 상대 손패는 개수만 세고 내용(FriendCard.Key)은 읽지 않는다(정보 제한)
+        private ComputerObservation BuildObservation()
+        {
+            var aiField = SnapshotFieldRange(ComputerFieldStart, ComputerFieldEnd);
+            var playerField = SnapshotFieldRange(UserFieldStart, UserFieldEnd);
+
+            var aiEmptySlots = new List<int>();
+            for (int i = ComputerFieldStart; i <= ComputerFieldEnd; i++)
+                if (!GetFieldSlot(i).IsOccupied) aiEmptySlots.Add(i);
+
+            int playerHandCount = _handSlots.Count(s => s.IsOccupied);
+
+            return new ComputerObservation(
+                aiHp: _computerBase.CurrentHp, aiMaxHp: _computerBase.MaxHp,
+                aiField: aiField, aiEmptySlotIndices: aiEmptySlots,
+                aiHand: new List<int>(_computerHand), aiDeckRemainingCount: _computerDeck.Count,
+                playerHp: _userBase.CurrentHp, playerField: playerField,
+                playerHandCount: playerHandCount, playerDeckRemainingCount: _userDeck.Count,
+                initialComputerDeckSize: _computerInitialDeckSize);
+        }
+
+        private List<FriendSnapshot> SnapshotFieldRange(int fromIndex, int toIndex)
+        {
+            var result = new List<FriendSnapshot>();
+            for (int i = fromIndex; i <= toIndex; i++)
+            {
+                var slot = GetFieldSlot(i);
+                if (!slot.IsOccupied) continue;
+                var friend = slot.GetComponentInChildren<Friend>();
+                result.Add(new FriendSnapshot(i, friend.Key, friend.Att, friend.CurrentHp, friend.MaxHp));
+            }
+            return result;
+        }
+
+        // ComputerAI가 결정한 행동을 실제로 반영 — 기존 배치/병합 경로(MergeCardIntoSlot, TryPlaceFriendCard의 신규 배치 분기)를 그대로 재사용
+        private void ExecuteComputerAction(ComputerAction action)
+        {
+            _computerHand.Remove(action.Key);
+
+            var slot = GetFieldSlot(action.SlotIndex);
+            if (action.IsMerge)
+            {
+                var existing = slot.GetComponentInChildren<Friend>();
+                MergeCardIntoSlot(existing, action.Key, action.SlotIndex);
+            }
+            else
+            {
+                var friend = Instantiate(_friendPrefab, slot.transform);
+                friend.SetKey(action.Key);
+            }
         }
 
         // 슬롯을 강제로 비운다 — 점유돼 있지 않으면 아무 것도 하지 않는다(치트 전용, TryHandleDeath를 거치지 않아 부활/포자감염을 트리거하지 않음)
@@ -613,7 +724,11 @@ namespace JungleDice.InGame
                 }
             }
 
-            if (target.IsDead) Destroy(target.gameObject);
+            if (target.IsDead)
+            {
+                AddToGraveyard(target.transform.parent.GetComponent<FieldSlot>().Index, target.Key);
+                Destroy(target.gameObject);
+            }
         }
 
         // BaseStone 대상 — 피해/회복만 의미가 있다(Att, 스폰 등은 본체를 대상으로 하는 카드가 없어 무시)
@@ -627,6 +742,8 @@ namespace JungleDice.InGame
                     case CardEffectClauseKind.Heal: target.Heal(clause.Value); break;
                 }
             }
+
+            TryEndGameIfBaseDestroyed(target);
         }
 
         // 사망 확정된 Friend를 부활/포자감염 규칙에 따라 처리한다. true를 반환하면 부활 성공 — 파괴하지 않고 필드에 남긴다.
@@ -647,6 +764,7 @@ namespace JungleDice.InGame
 
             bool hasSpawnMark = friend.SpawnMark.HasMark;
             int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
+            AddToGraveyard(slotTransform.GetComponent<FieldSlot>().Index, friend.Key);
             Destroy(friend.gameObject);
             if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
             return false;

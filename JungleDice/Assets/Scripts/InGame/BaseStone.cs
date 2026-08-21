@@ -9,6 +9,7 @@ namespace JungleDice.InGame
         [SerializeField] private int _maxHp = 30;
 
         public int CurrentHp { get; private set; }
+        public int MaxHp => _maxHp;
 
         private void Awake()
         {
