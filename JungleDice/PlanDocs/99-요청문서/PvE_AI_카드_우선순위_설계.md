@@ -2,7 +2,7 @@
 
 > [PvE AI 알고리즘 설계(초안)](PvE_AI_알고리즘_설계.md)은 보류하고, 이 문서의 조건 A/B 정의와 11개 우선순위 카테고리를 기준으로 삼는다. 이 문서는 AI 관점뿐 아니라 **플레이어 쪽 위급 여부까지 함께 고려한** 8가지 상황별 카드 우선순위와, 더 세분화된 친구 카드 능력 분류를 정리한다.
 >
-> **구현 현황**: 이 문서의 설계는 `Assets/Scripts/InGame/ComputerAI.cs`(판단 로직)와 `Assets/Scripts/Data/Table/ActionPriorityTable.cs` + `Assets/Tables/Source/ActionPriorityTable.csv`(순위 매트릭스 데이터)로 구현되어 있다. [plan-ingame-computer-ai.md](../06-ingame/plan-ingame-computer-ai.md)는 이 문서 이전의 다른 설계안(6카테고리/3그룹)을 다루고 있어 더 이상 유효하지 않다 — 참고 시 주의.
+> **구현 현황**: 이 문서의 설계는 `Assets/Scripts/InGame/ComputerAI.cs`(판단 로직)와 `Assets/Scripts/Data/Table/ActionPriorityTable.cs` + `Assets/Tables/Source/ActionPriorityTable.csv`(순위 매트릭스 데이터)로 구현되어 있다. [plan-ingame-computer-ai.md](../06-ingame/deprecated/plan-ingame-computer-ai.md)는 이 문서 이전의 다른 설계안(6카테고리/3그룹)을 다루고 있어 더 이상 유효하지 않다 — `deprecated/`로 이동됨, 참고 시 주의.
 
 ## AI 턴 동작 방식
 

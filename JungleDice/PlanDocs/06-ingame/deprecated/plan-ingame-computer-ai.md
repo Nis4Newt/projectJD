@@ -1,9 +1,9 @@
 # PvE 컴퓨터 AI 알고리즘 구현 계획
 
-> **⚠️ 대체됨 — 이 문서의 설계(6카테고리/3그룹, 조건 A+B/C, `CategoryValue` 가치 공식)는 실제로 구현되지 않았다.** 실제 구현은 [PvE AI 카드 우선순위 설계](../99-요청문서/PvE_AI_카드_우선순위_설계.md)의 11카테고리 순위 매트릭스(`UrgencyState`/`ActionPriorityTable`) 방식을 따른다 — 코드는 `Assets/Scripts/InGame/ComputerAI.cs`, `Assets/Scripts/Data/Table/ActionPriorityTable.cs`, `Assets/Tables/Source/ActionPriorityTable.csv`. 이 문서는 그 이전 설계안이 어떤 모양이었는지 참고용으로만 남겨둔다.
+> **⚠️ 대체됨 — 이 문서의 설계(6카테고리/3그룹, 조건 A+B/C, `CategoryValue` 가치 공식)는 실제로 구현되지 않았다.** 실제 구현은 [PvE AI 카드 우선순위 설계](../../99-요청문서/PvE_AI_카드_우선순위_설계.md)의 11카테고리 순위 매트릭스(`UrgencyState`/`ActionPriorityTable`) 방식을 따른다 — 코드는 `Assets/Scripts/InGame/ComputerAI.cs`, `Assets/Scripts/Data/Table/ActionPriorityTable.cs`, `Assets/Tables/Source/ActionPriorityTable.csv`. 이 문서는 그 이전 설계안이 어떤 모양이었는지 참고용으로만 남겨둔다.
 >
-> 상위 문서(원안, 보류): [PvE AI 알고리즘 설계(초안)](../99-요청문서/PvE_AI_알고리즘_설계.md) — 1/2/3그룹 판단 순서, 위급 신호 A+B/C 케이스, 카테고리별 가치 공식을 정의한 설계 원안. 이 문서는 그 설계를 실제 `InGameSceneManager`/`CardTable` 코드 구조로 옮기는 구현 계획이었다.
-> 관련 문서: [턴 진행 계획](plan-ingame-turnsystem.md) (`ComputerAdvanceAfterDelay`의 `PlayFriend` 분기가 이 문서의 삽입 지점), [핸드/필드 배치 계획](plan-ingame-handfield.md), [친구카드 합체 계획](plan-ingame-merge.md) (`CanMerge`/`MergeCardIntoSlot` 재사용), [친구카드 능력 계획](plan-ingame-ability.md) (`CardCondition`/`CardTarget`/`CardAbilityScope`/`CardEffectClause` 정의를 카테고리 분류·가치 공식의 입력으로 사용), [필드 슬롯 치트 에디터 계획](plan-ingame-cheat.md) (위급 신호 A+B/C 케이스를 재현할 필드 상태를 강제로 세팅하는 데 활용)
+> 상위 문서(원안, 보류): [PvE AI 알고리즘 설계(초안)](../../99-요청문서/PvE_AI_알고리즘_설계.md) — 1/2/3그룹 판단 순서, 위급 신호 A+B/C 케이스, 카테고리별 가치 공식을 정의한 설계 원안. 이 문서는 그 설계를 실제 `InGameSceneManager`/`CardTable` 코드 구조로 옮기는 구현 계획이었다.
+> 관련 문서: [턴 진행 계획](../plan-ingame-turnsystem.md) (`ComputerAdvanceAfterDelay`의 `PlayFriend` 분기가 이 문서의 삽입 지점), [핸드/필드 배치 계획](../plan-ingame-handfield.md), [친구카드 합체 계획](../plan-ingame-merge.md) (`CanMerge`/`MergeCardIntoSlot` 재사용), [친구카드 능력 계획](../plan-ingame-ability.md) (`CardCondition`/`CardTarget`/`CardAbilityScope`/`CardEffectClause` 정의를 카테고리 분류·가치 공식의 입력으로 사용), [필드 슬롯 치트 에디터 계획](../plan-ingame-cheat.md) (위급 신호 A+B/C 케이스를 재현할 필드 상태를 강제로 세팅하는 데 활용)
 > 의존 관계: `JungleDice.Data.Table.CardTable`(카드 능력 데이터), `JungleDice.InGame.InGameSceneManager`(필드/덱/베이스 상태, `GetFieldFriends`/`CanMerge`/`MergeCardIntoSlot`/`OwnFieldRange`/`OpponentFieldRange`), `JungleDice.InGame.Friend`/`BaseStone`(스탯 조회)
 > 범위: 컴퓨터의 `PlayFriend` 단계에서 원 설계 문서의 1/2/3그룹 순서를 그대로 따라 "무엇을 어디에 낼 것인가"를 결정하는 로직만 다룬다. `RollAttacker`/`RollTarget` 자체(이미 소유자 무관 완전 랜덤)는 범위 밖. 위급 신호 임계값(예: C 케이스의 확률 임계치)의 최종 수치 튜닝은 원 설계 문서의 "미결 사항"과 동일하게 이번 문서에서도 확정하지 않고 플레이테스트로 넘긴다.
 
@@ -11,7 +11,7 @@
 
 ## 배경
 
-[턴 진행 계획](plan-ingame-turnsystem.md)이 비워둔 지점은 정확히 하나다 — `EnterPhase(TurnPhase.PlayFriend)`에서 컴퓨터 턴이면 `DrawHandCards()`조차 호출되지 않고, `ComputerAdvanceAfterDelay`는 2초 뒤 다음 단계로 넘어갈 뿐이다. 이 문서는 [PvE AI 알고리즘 설계(초안)](../99-요청문서/PvE_AI_알고리즘_설계.md)이 정의한 판단 순서를 그 지점에 그대로 구현한다.
+[턴 진행 계획](../plan-ingame-turnsystem.md)이 비워둔 지점은 정확히 하나다 — `EnterPhase(TurnPhase.PlayFriend)`에서 컴퓨터 턴이면 `DrawHandCards()`조차 호출되지 않고, `ComputerAdvanceAfterDelay`는 2초 뒤 다음 단계로 넘어갈 뿐이다. 이 문서는 [PvE AI 알고리즘 설계(초안)](../../99-요청문서/PvE_AI_알고리즘_설계.md)이 정의한 판단 순서를 그 지점에 그대로 구현한다.
 
 ```
 매 턴 AI 행동 결정:
@@ -562,7 +562,7 @@ InGameSceneManager (기존 파일 수정, InGame/)
 └── EnterPhase(TurnPhase.PlayFriend) 컴퓨터 분기      ← 기존 수정, 7번 결정의 3줄 추가
 ```
 
-`ComputerAI`를 별도 파일/네임스페이스로 완전히 분리하는 이유는 [턴 진행 계획](plan-ingame-turnsystem.md)이 턴 상태 머신을 분리하지 않은 이유("재사용 근거 없음")와 반대다 — 이번엔 판단 메서드가 15개 이상이고 전부 `ComputerObservation` 값만으로 완결되므로(Unity `MonoBehaviour`/필드 접근이 전혀 필요 없음), `InGameSceneManager`에 얹으면 그 거대한 파일이 더 비대해질 뿐 아니라 판단 로직만 따로 유닛 테스트할 방법이 없어진다. `BuildObservation`(관찰)과 `ExecuteComputerAction`(실행)만 Unity 상태에 접근하고, 그 사이(판단)는 순수 함수로 완전히 격리한다.
+`ComputerAI`를 별도 파일/네임스페이스로 완전히 분리하는 이유는 [턴 진행 계획](../plan-ingame-turnsystem.md)이 턴 상태 머신을 분리하지 않은 이유("재사용 근거 없음")와 반대다 — 이번엔 판단 메서드가 15개 이상이고 전부 `ComputerObservation` 값만으로 완결되므로(Unity `MonoBehaviour`/필드 접근이 전혀 필요 없음), `InGameSceneManager`에 얹으면 그 거대한 파일이 더 비대해질 뿐 아니라 판단 로직만 따로 유닛 테스트할 방법이 없어진다. `BuildObservation`(관찰)과 `ExecuteComputerAction`(실행)만 Unity 상태에 접근하고, 그 사이(판단)는 순수 함수로 완전히 격리한다.
 
 ---
 
@@ -623,7 +623,7 @@ Assets/Scripts/
 
 ## 구현 시 주의사항
 
-- **`AllyRandom`/`EnemyRandom` 평균 계산은 `CardCondition.Except` 카드를 제외해야 한다**: [친구카드 능력 계획](plan-ingame-ability.md)의 `PickRandomTargetable`이 이미 독수리류를 걸러내고 실제 발동하므로, `CategoryValue`의 `AverageStatOf`/`AverageAtt` 등도 같은 필터를 적용하지 않으면 "점수는 매겨졌는데 실제로는 대상이 아니라 발동 안 되는" 불일치가 생긴다(치트 에디터 문서에서 반복 강조된 것과 같은 종류의 함정).
+- **`AllyRandom`/`EnemyRandom` 평균 계산은 `CardCondition.Except` 카드를 제외해야 한다**: [친구카드 능력 계획](../plan-ingame-ability.md)의 `PickRandomTargetable`이 이미 독수리류를 걸러내고 실제 발동하므로, `CategoryValue`의 `AverageStatOf`/`AverageAtt` 등도 같은 필터를 적용하지 않으면 "점수는 매겨졌는데 실제로는 대상이 아니라 발동 안 되는" 불일치가 생긴다(치트 에디터 문서에서 반복 강조된 것과 같은 종류의 함정).
 - **`ComputerObservation`은 스냅샷이지 실시간 참조가 아니다**: `DecideComputerAction` 내부에서 게임 상태를 다시 조회하지 않는다 — 판단 도중 상태가 바뀔 일이 없는 동기 실행 구조이므로(턴 상태 머신이 단일 진행), 스냅샷 하나로 전 판단을 끝내는 것이 맞다. 실행(`ExecuteComputerAction`)만 실제 상태를 변경한다.
 - **상대 손패 "내용"을 절대 읽지 않는다**: `BuildObservation`에서 `_handSlots.Count(s => s.IsOccupied)`처럼 개수만 세고, `GetComponentInChildren<FriendCard>().Key`를 호출하지 않는다 — 기술적으로는 가능하지만 원 문서의 정보 제한 설계를 깨는 것이므로, 코드 리뷰에서 반드시 확인해야 할 지점.
 - **초기하분포 계산의 `sheets` 필드 의존은 `DeckBuilder`의 현재 동작과 어긋난다는 것을 인지한 채로 구현한다**(이번 범위에서 제외 참고) — 지금 당장 버그를 고치라는 뜻이 아니라, 두 값이 다르다는 걸 알고 있어야 나중에 확률 계산이 안 맞을 때 헤매지 않는다.
@@ -638,7 +638,7 @@ Assets/Scripts/
 - [ ] `InGameSceneManager.cs`: `_computerHand`/`_computerInitialDeckSize` 필드, `RefillComputerHand`/`BuildObservation`/`ExecuteComputerAction` 추가
 - [ ] `EnterPhase(TurnPhase.PlayFriend)`의 컴퓨터 분기에 `RefillComputerHand` → `DecideComputerAction` → `ExecuteComputerAction` 연결
 - [ ] `HypergeometricPmf`/`Combination`에 대한 순수 단위 테스트(알려진 손 계산값과 비교) 작성
-- [ ] 테스트 시나리오 10개 검증(Unity Play 모드, [필드 슬롯 치트 에디터](plan-ingame-cheat.md)로 체력/필드/덱 잔여 상태를 강제 세팅해 A+B/C 케이스 재현)
+- [ ] 테스트 시나리오 10개 검증(Unity Play 모드, [필드 슬롯 치트 에디터](../plan-ingame-cheat.md)로 체력/필드/덱 잔여 상태를 강제 세팅해 A+B/C 케이스 재현)
 - [ ] 여러 판을 실제로 플레이해 `ConditionAHpRatio`/`DirectAttackDangerHpThreshold`/`DirectAttackThreatThreshold`/`FinisherPriorityMultiplier` 등 상수 1차 튜닝
 - [ ] (추후) "당장 병합 vs 다음 턴까지 보유" 트레이드오프 고도화 — 원 문서의 미결 사항
 - [ ] (추후) 난이도 단계별 상수 프리셋 도입 여부 검토
