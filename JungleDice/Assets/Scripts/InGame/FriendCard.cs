@@ -93,5 +93,12 @@ namespace JungleDice.InGame
         }
 
         public void NotifyPlaced() => _wasPlaced = true;
+
+        // 뽑았지만 핸드에 들어가지 못한 카드를 페이드 아웃 후 파괴한다(풀 핸드 드로우 전용)
+        public void Discard(float duration)
+        {
+            _canvasGroup.blocksRaycasts = false; // HomeSlot이 없어 드래그를 시작하면 되돌아갈 곳이 없으므로 애초에 입력을 막는다
+            _canvasGroup.DOFade(0f, duration).OnComplete(() => Destroy(gameObject));
+        }
     }
 }

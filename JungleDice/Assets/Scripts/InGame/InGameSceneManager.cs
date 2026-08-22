@@ -142,12 +142,12 @@ namespace JungleDice.InGame
                     Debug.Log($"[InGame] {_currentOwner} 턴 - 친구카드 플레이");
                     if (_currentOwner == TurnOwner.User)
                     {
-                        DrawHandCards();
+                        if (DrawHandCards()) return; // 덱 소진 피해로 게임오버 — 턴 진행 중단
                         _resultPanel.PlayMyTurnAlert();
                     }
                     else
                     {
-                        RefillComputerHand();
+                        if (RefillComputerHand()) return; // 덱 소진 피해로 게임오버 — 턴 진행 중단
                         StartCoroutine(RunComputerTurnRoutine());
                     }
                     _actionButtonText.text = "roll attacker";
@@ -347,16 +347,40 @@ namespace JungleDice.InGame
             yield return SwitchTurnAfterDelay();
         }
 
-        private void DrawHandCards()
+        // 반환값 true = 이번 드로우(덱 소진 피해)로 본체가 파괴되어 GameOver로 전이함 — 호출부가 이후 턴 진행을 중단해야 함
+        private bool DrawHandCards()
         {
+            if (_userDeck.Count == 0)
+            {
+                Debug.LogWarning("[InGame] User 덱 소진 — 드로우 대신 본체 피해 1");
+                _userBase.TakeDamage(1);
+                return TryEndGameIfBaseDestroyed(_userBase);
+            }
+
             var emptySlots = new List<HandSlot>();
             foreach (var slot in _handSlots)
                 if (!slot.IsOccupied) emptySlots.Add(slot);
 
-            int needed = Mathf.Min(emptySlots.Count, _userDeck.Count);
-            if (needed <= 0) return;
+            if (emptySlots.Count == 0)
+            {
+                DrawAndDiscardOne();
+                return false;
+            }
 
+            int needed = Mathf.Min(emptySlots.Count, _userDeck.Count);
             StartCoroutine(DrawHandCardsRoutine(emptySlots, needed));
+            return false;
+        }
+
+        // 풀 핸드 상태에서도 덱은 그대로 소비된다 — 뽑은 카드는 핸드에 들어가지 못하고 파괴된다
+        private void DrawAndDiscardOne()
+        {
+            int key = _userDeck[0];
+            _userDeck.RemoveAt(0);
+
+            Debug.LogWarning($"[InGame] User 풀 핸드 드로우 — key={key} 카드 파괴됨");
+
+            SpawnCardAtDeck(key).Discard(_drawDuration);
         }
 
         private IEnumerator DrawHandCardsRoutine(List<HandSlot> emptySlots, int count)
@@ -374,12 +398,20 @@ namespace JungleDice.InGame
 
         private void SpawnFriendCard(int key, HandSlot slot)
         {
-            var card = Instantiate(_friendCardPrefab, _dragLayer);
-            card.transform.position = _deckOrigin.position; // 덱 오브젝트의 위치에서 생성
-            card.SetKey(key);
+            var card = SpawnCardAtDeck(key);
             card.Initialize(_dragLayer);
 
             card.MoveToSlot(slot, _drawDuration); // 빈 슬롯 위치로 이동 후 도착하면 그 슬롯의 자식으로
+        }
+
+        // 덱 오브젝트의 위치에서 FriendCard를 생성하고 key를 세팅한다 — 정상 드로우(SpawnFriendCard)와
+        // 풀 핸드 드로우(DrawAndDiscardOne)가 공유하는 전처리, 이후 처리(슬롯 이동/파괴)만 호출부마다 다르다.
+        private FriendCard SpawnCardAtDeck(int key)
+        {
+            var card = Instantiate(_friendCardPrefab, _dragLayer);
+            card.transform.position = _deckOrigin.position; // 덱 오브젝트의 위치에서 생성
+            card.SetKey(key);
+            return card;
         }
 
         // 유저가 "roll attacker"를 눌러 PlayFriend를 끝낼 때, hand의 빈 슬롯(드래그로 필드에 낸 카드 자리)을 앞으로 당겨 채운다.
@@ -451,13 +483,29 @@ namespace JungleDice.InGame
         }
 
         // 컴퓨터 손패를 ComputerHandSize까지 채운다 — 유저의 DrawHandCardsRoutine과 동일하게 덱 앞에서부터 소비(이미 셔플됨), 화면에 그리지 않으므로 연출 없이 즉시 채움
-        private void RefillComputerHand()
+        // 반환값 true = 이번 드로우(덱 소진 피해)로 본체가 파괴되어 GameOver로 전이함 — 호출부가 RunComputerTurnRoutine 시작을 건너뛰어야 함
+        private bool RefillComputerHand()
         {
+            if (_computerDeck.Count == 0)
+            {
+                Debug.LogWarning("[InGame] Computer 덱 소진 — 드로우 대신 본체 피해 1");
+                _computerBase.TakeDamage(1);
+                return TryEndGameIfBaseDestroyed(_computerBase);
+            }
+
+            if (_computerHand.Count == ComputerHandSize)
+            {
+                Debug.LogWarning($"[InGame] Computer 풀 핸드 드로우 — key={_computerDeck[0]} 카드 파괴됨");
+                _computerDeck.RemoveAt(0); // 풀 핸드 드로우 — 화면에 없는 손패라 파괴 연출 없이 그대로 버려짐
+                return false;
+            }
+
             while (_computerHand.Count < ComputerHandSize && _computerDeck.Count > 0)
             {
                 _computerHand.Add(_computerDeck[0]);
                 _computerDeck.RemoveAt(0);
             }
+            return false;
         }
 
         // 컴퓨터 턴 한 번에 손패 전체(0~ComputerHandSize장)를 순서대로 낸다.
