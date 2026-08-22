@@ -142,12 +142,12 @@ namespace JungleDice.InGame
                     Debug.Log($"[InGame] {_currentOwner} 턴 - 친구카드 플레이");
                     if (_currentOwner == TurnOwner.User)
                     {
-                        DrawHandCards();
+                        if (DrawHandCards()) return; // 덱 소진 피해로 게임오버 — 턴 진행 중단
                         _resultPanel.PlayMyTurnAlert();
                     }
                     else
                     {
-                        RefillComputerHand();
+                        if (RefillComputerHand()) return; // 덱 소진 피해로 게임오버 — 턴 진행 중단
                         StartCoroutine(RunComputerTurnRoutine());
                     }
                     _actionButtonText.text = "roll attacker";
@@ -347,16 +347,25 @@ namespace JungleDice.InGame
             yield return SwitchTurnAfterDelay();
         }
 
-        private void DrawHandCards()
+        // 반환값 true = 이번 드로우(덱 소진 피해)로 본체가 파괴되어 GameOver로 전이함 — 호출부가 이후 턴 진행을 중단해야 함
+        private bool DrawHandCards()
         {
+            if (_userDeck.Count == 0)
+            {
+                Debug.LogWarning("[InGame] User 덱 소진 — 드로우 대신 본체 피해 1");
+                _userBase.TakeDamage(1);
+                return TryEndGameIfBaseDestroyed(_userBase);
+            }
+
             var emptySlots = new List<HandSlot>();
             foreach (var slot in _handSlots)
                 if (!slot.IsOccupied) emptySlots.Add(slot);
 
             int needed = Mathf.Min(emptySlots.Count, _userDeck.Count);
-            if (needed <= 0) return;
+            if (needed <= 0) return false;
 
             StartCoroutine(DrawHandCardsRoutine(emptySlots, needed));
+            return false;
         }
 
         private IEnumerator DrawHandCardsRoutine(List<HandSlot> emptySlots, int count)
@@ -451,13 +460,22 @@ namespace JungleDice.InGame
         }
 
         // 컴퓨터 손패를 ComputerHandSize까지 채운다 — 유저의 DrawHandCardsRoutine과 동일하게 덱 앞에서부터 소비(이미 셔플됨), 화면에 그리지 않으므로 연출 없이 즉시 채움
-        private void RefillComputerHand()
+        // 반환값 true = 이번 드로우(덱 소진 피해)로 본체가 파괴되어 GameOver로 전이함 — 호출부가 RunComputerTurnRoutine 시작을 건너뛰어야 함
+        private bool RefillComputerHand()
         {
+            if (_computerDeck.Count == 0)
+            {
+                Debug.LogWarning("[InGame] Computer 덱 소진 — 드로우 대신 본체 피해 1");
+                _computerBase.TakeDamage(1);
+                return TryEndGameIfBaseDestroyed(_computerBase);
+            }
+
             while (_computerHand.Count < ComputerHandSize && _computerDeck.Count > 0)
             {
                 _computerHand.Add(_computerDeck[0]);
                 _computerDeck.RemoveAt(0);
             }
+            return false;
         }
 
         // 컴퓨터 턴 한 번에 손패 전체(0~ComputerHandSize장)를 순서대로 낸다.
