@@ -361,11 +361,26 @@ namespace JungleDice.InGame
             foreach (var slot in _handSlots)
                 if (!slot.IsOccupied) emptySlots.Add(slot);
 
-            int needed = Mathf.Min(emptySlots.Count, _userDeck.Count);
-            if (needed <= 0) return false;
+            if (emptySlots.Count == 0)
+            {
+                DrawAndDiscardOne();
+                return false;
+            }
 
+            int needed = Mathf.Min(emptySlots.Count, _userDeck.Count);
             StartCoroutine(DrawHandCardsRoutine(emptySlots, needed));
             return false;
+        }
+
+        // 풀 핸드 상태에서도 덱은 그대로 소비된다 — 뽑은 카드는 핸드에 들어가지 못하고 파괴된다
+        private void DrawAndDiscardOne()
+        {
+            int key = _userDeck[0];
+            _userDeck.RemoveAt(0);
+
+            Debug.LogWarning($"[InGame] User 풀 핸드 드로우 — key={key} 카드 파괴됨");
+
+            SpawnCardAtDeck(key).Discard(_drawDuration);
         }
 
         private IEnumerator DrawHandCardsRoutine(List<HandSlot> emptySlots, int count)
@@ -383,12 +398,20 @@ namespace JungleDice.InGame
 
         private void SpawnFriendCard(int key, HandSlot slot)
         {
-            var card = Instantiate(_friendCardPrefab, _dragLayer);
-            card.transform.position = _deckOrigin.position; // 덱 오브젝트의 위치에서 생성
-            card.SetKey(key);
+            var card = SpawnCardAtDeck(key);
             card.Initialize(_dragLayer);
 
             card.MoveToSlot(slot, _drawDuration); // 빈 슬롯 위치로 이동 후 도착하면 그 슬롯의 자식으로
+        }
+
+        // 덱 오브젝트의 위치에서 FriendCard를 생성하고 key를 세팅한다 — 정상 드로우(SpawnFriendCard)와
+        // 풀 핸드 드로우(DrawAndDiscardOne)가 공유하는 전처리, 이후 처리(슬롯 이동/파괴)만 호출부마다 다르다.
+        private FriendCard SpawnCardAtDeck(int key)
+        {
+            var card = Instantiate(_friendCardPrefab, _dragLayer);
+            card.transform.position = _deckOrigin.position; // 덱 오브젝트의 위치에서 생성
+            card.SetKey(key);
+            return card;
         }
 
         // 유저가 "roll attacker"를 눌러 PlayFriend를 끝낼 때, hand의 빈 슬롯(드래그로 필드에 낸 카드 자리)을 앞으로 당겨 채운다.
@@ -468,6 +491,13 @@ namespace JungleDice.InGame
                 Debug.LogWarning("[InGame] Computer 덱 소진 — 드로우 대신 본체 피해 1");
                 _computerBase.TakeDamage(1);
                 return TryEndGameIfBaseDestroyed(_computerBase);
+            }
+
+            if (_computerHand.Count == ComputerHandSize)
+            {
+                Debug.LogWarning($"[InGame] Computer 풀 핸드 드로우 — key={_computerDeck[0]} 카드 파괴됨");
+                _computerDeck.RemoveAt(0); // 풀 핸드 드로우 — 화면에 없는 손패라 파괴 연출 없이 그대로 버려짐
+                return false;
             }
 
             while (_computerHand.Count < ComputerHandSize && _computerDeck.Count > 0)
