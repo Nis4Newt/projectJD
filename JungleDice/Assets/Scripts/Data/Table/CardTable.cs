@@ -74,6 +74,9 @@ namespace JungleDice.Data.Table
             };
         }
 
+        // 전체 행 그대로 노출(얕은 참조) — 호출부는 이 리스트를 변형하지 않는다
+        public IReadOnlyList<CardTableData> GetAll() => Rows;
+
         // 없는 key면 LogError 후 null 반환 — 예외로 죽지 않도록 TryGet 경유
         public CardTableData Get(int key)
         {
