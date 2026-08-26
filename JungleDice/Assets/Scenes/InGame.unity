@@ -3426,7 +3426,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::JungleDice.InGame.InGameSceneManager
   _actionButton: {fileID: 731110506}
   _actionButtonText: {fileID: 153364286}
-  _friendCardPrefab: {fileID: 9203505280485400170, guid: 5bc5c794fa799e94bb2c6c592cea2585, type: 3}
+  _friendCardPrefab: {fileID: 4230983874517856915, guid: 5bc5c794fa799e94bb2c6c592cea2585, type: 3}
   _friendPrefab: {fileID: 2883520605055288656, guid: 5fe90238425900a479d29332e01049c7, type: 3}
   _deckOrigin: {fileID: 542117964}
   _handSlots:
@@ -3454,6 +3454,8 @@ MonoBehaviour:
   _attackerPunchDuration: 1
   _moveToTargetDuration: 0.3
   _moveBackDuration: 0.3
+  _mergePunchScale: 0.1
+  _mergePunchDuration: 0.25
   _resultPanel: {fileID: 1402574946}
   _settingsButton: {fileID: 2064077632}
   _canvasTransform: {fileID: 2091784582}

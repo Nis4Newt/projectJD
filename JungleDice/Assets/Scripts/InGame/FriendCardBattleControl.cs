@@ -1,0 +1,86 @@
+using DG.Tweening;
+using UnityEngine;
+using UnityEngine.EventSystems;
+
+namespace JungleDice.InGame
+{
+    [RequireComponent(typeof(FriendCard))]
+    [RequireComponent(typeof(CanvasGroup))]
+    public class FriendCardBattleControl : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+    {
+        private CanvasGroup _canvasGroup;
+        private FriendCard _friendCard;
+        private Transform _dragLayer;
+        private HandSlot _homeSlot;
+        private bool _wasPlaced;
+
+        public FriendCard Data => _friendCard;
+        public HandSlot HomeSlot => _homeSlot;
+
+        private void Awake()
+        {
+            _canvasGroup = GetComponent<CanvasGroup>();
+            _friendCard = GetComponent<FriendCard>();
+        }
+
+        public void Initialize(Transform dragLayer) => _dragLayer = dragLayer;
+
+        // 슬롯 위치까지 트윈으로 이동한 뒤 도착하면 그 슬롯의 자식으로 붙는다(덱 드로우/hand 정리 공용)
+        public void MoveToSlot(HandSlot slot, float duration)
+        {
+            transform.DOMove(slot.transform.position, duration)
+                .SetEase(Ease.OutQuint)
+                .OnComplete(() => AttachToSlot(slot));
+        }
+
+        // 트윈 없이 즉시 슬롯의 자식으로 붙인다(드롭 실패 후 원래 자리 복귀 등)
+        public void AttachToSlot(HandSlot slot)
+        {
+            _homeSlot = slot;
+            transform.SetParent(slot.transform, worldPositionStays: false);
+            ((RectTransform)transform).anchoredPosition = Vector2.zero;
+        }
+
+        public void OnBeginDrag(PointerEventData eventData)
+        {
+            if (!InGameSceneManager.Instance.CanPlayFriend)
+            {
+                eventData.pointerDrag = null; // 드래그 자체를 취소 — 이후 OnDrag/OnEndDrag가 이 오브젝트에 호출되지 않음
+                return;
+            }
+
+            _canvasGroup.blocksRaycasts = false; // 이 카드 자신이 아래 FieldSlot의 레이캐스트를 가로막지 않도록
+
+            transform.SetParent(_dragLayer, worldPositionStays: true); // 자기 슬롯 밖으로 — 즉시 hand에서 빠짐(슬롯은 빈 채로 남음, 다른 카드가 채우지 않음)
+            transform.SetAsLastSibling(); // 다른 UI보다 위에 그려지도록
+
+            InGameSceneManager.Instance.ShowMergePreview(_friendCard.Key);
+        }
+
+        public void OnDrag(PointerEventData eventData)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                (RectTransform)_dragLayer, eventData.position, eventData.pressEventCamera, out var localPoint);
+            ((RectTransform)transform).localPosition = localPoint;
+        }
+
+        public void OnEndDrag(PointerEventData eventData)
+        {
+            _canvasGroup.blocksRaycasts = true;
+            InGameSceneManager.Instance.HideMergePreview(); // 드롭 성공/실패와 무관하게 항상 호출
+
+            if (_wasPlaced) return; // 필드 배치 성공 — 이번 프레임 안에 파괴 예정, 되돌릴 필요 없음
+
+            AttachToSlot(_homeSlot); // 드롭 실패 — 원래 있던 자기 슬롯으로 즉시 복귀
+        }
+
+        public void NotifyPlaced() => _wasPlaced = true;
+
+        // 뽑았지만 핸드에 들어가지 못한 카드를 페이드 아웃 후 파괴한다(풀 핸드 드로우 전용)
+        public void Discard(float duration)
+        {
+            _canvasGroup.blocksRaycasts = false; // HomeSlot이 없어 드래그를 시작하면 되돌아갈 곳이 없으므로 애초에 입력을 막는다
+            _canvasGroup.DOFade(0f, duration).OnComplete(() => Destroy(gameObject));
+        }
+    }
+}

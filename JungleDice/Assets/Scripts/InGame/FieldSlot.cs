@@ -12,8 +12,8 @@ namespace JungleDice.InGame
 
         public void OnDrop(PointerEventData eventData)
         {
-            var card = eventData.pointerDrag != null ? eventData.pointerDrag.GetComponent<FriendCard>() : null;
-            if (card == null) return; // FriendCard가 아닌 다른 드래그 대상은 무시(현재는 존재하지 않지만 방어)
+            var card = eventData.pointerDrag != null ? eventData.pointerDrag.GetComponent<FriendCardBattleControl>() : null;
+            if (card == null) return; // FriendCardBattleControl이 아닌 다른 드래그 대상은 무시(현재는 존재하지 않지만 방어)
 
             InGameSceneManager.Instance.TryPlaceFriendCard(this, card);
         }

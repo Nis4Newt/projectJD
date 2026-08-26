@@ -32,7 +32,7 @@ namespace JungleDice.InGame
         [SerializeField] private Button _actionButton;
         [SerializeField] private TextMeshProUGUI _actionButtonText;
 
-        [SerializeField] private FriendCard _friendCardPrefab;
+        [SerializeField] private FriendCardBattleControl _friendCardPrefab;
         [SerializeField] private Friend _friendPrefab;
         [SerializeField] private Transform _deckOrigin;
         [SerializeField] private HandSlot[] _handSlots; // hand의 고정 슬롯 4개, 인덱스 0~3(왼쪽→오른쪽)
@@ -406,22 +406,22 @@ namespace JungleDice.InGame
 
         // 덱 오브젝트의 위치에서 FriendCard를 생성하고 key를 세팅한다 — 정상 드로우(SpawnFriendCard)와
         // 풀 핸드 드로우(DrawAndDiscardOne)가 공유하는 전처리, 이후 처리(슬롯 이동/파괴)만 호출부마다 다르다.
-        private FriendCard SpawnCardAtDeck(int key)
+        private FriendCardBattleControl SpawnCardAtDeck(int key)
         {
             var card = Instantiate(_friendCardPrefab, _dragLayer);
             card.transform.position = _deckOrigin.position; // 덱 오브젝트의 위치에서 생성
-            card.SetKey(key);
+            card.Data.SetKey(key);
             return card;
         }
 
         // 유저가 "roll attacker"를 눌러 PlayFriend를 끝낼 때, hand의 빈 슬롯(드래그로 필드에 낸 카드 자리)을 앞으로 당겨 채운다.
         private void CompactHand()
         {
-            var cards = new List<FriendCard>();
+            var cards = new List<FriendCardBattleControl>();
             foreach (var slot in _handSlots)
             {
                 if (slot.IsOccupied)
-                    cards.Add(slot.GetComponentInChildren<FriendCard>());
+                    cards.Add(slot.GetComponentInChildren<FriendCardBattleControl>());
             }
 
             for (int i = 0; i < cards.Count; i++)
@@ -435,14 +435,14 @@ namespace JungleDice.InGame
             }
         }
 
-        public void TryPlaceFriendCard(FieldSlot slot, FriendCard card)
+        public void TryPlaceFriendCard(FieldSlot slot, FriendCardBattleControl card)
         {
             if (slot.IsOccupied)
             {
                 var existing = slot.GetComponentInChildren<Friend>();
-                if (!CanMerge(existing, card.Key)) return; // 병합 불가 — 배치 거부, OnEndDrag가 원래 슬롯으로 복귀시킴
+                if (!CanMerge(existing, card.Data.Key)) return; // 병합 불가 — 배치 거부, OnEndDrag가 원래 슬롯으로 복귀시킴
 
-                MergeCardIntoSlot(existing, card.Key, slot.Index);
+                MergeCardIntoSlot(existing, card.Data.Key, slot.Index);
 
                 card.NotifyPlaced();
                 Destroy(card.gameObject);
@@ -450,7 +450,7 @@ namespace JungleDice.InGame
             }
 
             var friend = Instantiate(_friendPrefab, slot.transform);
-            friend.SetKey(card.Key);
+            friend.SetKey(card.Data.Key);
 
             card.NotifyPlaced();
             Destroy(card.gameObject);
