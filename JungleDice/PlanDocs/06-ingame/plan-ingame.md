@@ -60,12 +60,12 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 
 ---
 
-## 이번 범위에서 제외
+## 이번 범위(1~6단계)에서 제외 — 이후 후속 문서에서 처리됨
 
-- `CardCondition`/`CardTarget`을 이용한 합체 발동 효과·이종 합체 — 최소 병합(같은 종류, 공격력/체력 누적)만 6단계에서 다룸
-- 컴퓨터 측 핸드 연출/필드(1/2/3번), `_computerDeck` 소비 — 컴퓨터의 `PlayFriend`는 로그만 남기는 스텁 그대로(4단계에서 `FieldSlot`만 미리 배치)
-- `GameState.GameOver` 이후 컴퓨터 진영의 결과 위젯 — 유저 진영 위젯(아이콘/승패 프레임/메인메뉴 복귀)만 5단계에서 다룸
-- `GameType.Battle`(대전) 모드의 InGame 로직 — 이 문서는 Solo 전용
+- `CardCondition`/`CardTarget`을 이용한 합체 발동 효과·이종 합체 — 최소 병합(같은 종류, 공격력/체력 누적)만 6단계에서 다룸. 발동 효과·이종 합체는 [plan-ingame-ability.md](plan-ingame-ability.md)에서 구현 완료
+- 컴퓨터 측 핸드 연출/필드(1/2/3번), `_computerDeck` 소비 — 4단계 시점엔 `PlayFriend`가 로그만 남기는 스텁이었으나, [PvE AI 카드 우선순위 설계](../99-요청문서/PvE_AI_카드_우선순위_설계.md) 기반 `ComputerAI.cs`로 구현 완료
+- `GameState.GameOver` 이후 컴퓨터 진영의 결과 위젯 — 유저 진영 위젯(아이콘/승패 프레임/메인메뉴 복귀)만 5단계에서 다룸(5단계 자체는 [plan-ingame-result.md](plan-ingame-result.md) 아직 미구현). 컴퓨터 진영 위젯은 여전히 미구현
+- `GameType.Battle`(대전) 모드의 InGame 로직 — 이 문서는 Solo 전용, 여전히 미구현
 
 ---
 
@@ -76,8 +76,11 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 - [x] [plan-ingame-handfield.md](plan-ingame-handfield.md) 구현
 - [x] [plan-ingame-attack.md](plan-ingame-attack.md) 구현
 - [ ] [plan-ingame-result.md](plan-ingame-result.md) 구현
-- [ ] [plan-ingame-merge.md](plan-ingame-merge.md) 구현
-- [ ] [plan-ingame-computer-ai.md](plan-ingame-computer-ai.md) — 컴퓨터 핸드/필드(1/2/3번) 배치를 규칙 기반 알고리즘(1/2/3그룹)으로 결정하는 후속 계획 문서
-- [ ] [plan-ingame-ability.md](plan-ingame-ability.md) — `CardCondition`/`CardTarget` 발동 효과·이종 합체를 다루는 후속 계획 문서
+- [x] [plan-ingame-merge.md](plan-ingame-merge.md) 구현
+- [x] [plan-ingame-ability.md](plan-ingame-ability.md) 구현 — `CardCondition`/`CardTarget` 발동 효과·이종 합체
+- [x] 컴퓨터 핸드/필드(1/2/3번) 배치 AI 구현 — [deprecated/plan-ingame-computer-ai.md](deprecated/plan-ingame-computer-ai.md)의 설계안 대신 [PvE AI 카드 우선순위 설계](../99-요청문서/PvE_AI_카드_우선순위_설계.md)의 11카테고리 순위 매트릭스 방식으로 대체 구현됨(`ComputerAI.cs`)
+- [x] [plan-ingame-cheat.md](plan-ingame-cheat.md) 구현 — 필드 슬롯 치트 에디터
+- [x] [plan-ingame-graveyard.md](plan-ingame-graveyard.md) 구현 — 진영별 무덤(파괴 기록) 리스트
+- [x] [plan-ingame-draw.md](plan-ingame-draw.md) 구현 — 드로우 예외 처리(풀 핸드/덱 소진)
 - [ ] (추후) 컴퓨터 진영 결과 위젯
 - [ ] (추후) `GameType.Battle` 모드의 InGame 로직 별도 계획 문서
