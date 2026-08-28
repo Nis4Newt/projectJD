@@ -16,6 +16,7 @@ namespace JungleDice.MainMenu
             Replace,
         }
 
+        [SerializeField] private RectTransform _content; // ScrollView/Content(VerticalLayoutGroup+ContentSizeFitter) — _gridContent 높이 변경을 전파받는 상위
         [SerializeField] private Transform _gridContent;
         [SerializeField] private FriendListItem _listItemPrefab;
         [SerializeField] private GameObject _friendCardList;
@@ -54,6 +55,10 @@ namespace JungleDice.MainMenu
                 item.SetKey(data.key);
                 item.Clicked += OnListItemClicked;
             }
+
+            // GridLayoutGroup(_gridContent)의 preferredHeight는 자식 수에 따라 바뀌지만 리빌드는 프레임 끝에 지연되므로,
+            // 그 값을 곧바로 물려받는 Content(VerticalLayoutGroup+ContentSizeFitter)까지 강제로 즉시 리빌드한다.
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_content);
         }
 
         private void RefreshSlots()
