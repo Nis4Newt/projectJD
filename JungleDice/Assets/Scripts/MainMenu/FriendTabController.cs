@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using JungleDice.Core.Event;
 using JungleDice.Core.User;
@@ -23,6 +24,7 @@ namespace JungleDice.MainMenu
         [SerializeField] private GameObject _replaceUI;
         [SerializeField] private FriendCardMainControl _replaceCard;
         [SerializeField] private Button _panelBackgroundButton;
+        [SerializeField] private Button[] _deckButtons; // 3개, UserData 덱 인덱스와 1:1
 
         private readonly CompositeDisposable _subs = new();
         private FriendTabState _state = FriendTabState.List;
@@ -36,6 +38,12 @@ namespace JungleDice.MainMenu
             _replaceUI.SetActive(false);
             _panelBackgroundButton.onClick.AddListener(OnPanelBackgroundClicked);
             _subs.Add(EventBus.Subscribe<UserDataChanged>(_ => RefreshSlots()));
+
+            for (int i = 0; i < _deckButtons.Length; i++)
+            {
+                int index = i; // 클로저 캡처 방지
+                _deckButtons[i].onClick.AddListener(() => UserManager.Current.SelectDeck(index));
+            }            
         }
 
         private void PopulateList()
