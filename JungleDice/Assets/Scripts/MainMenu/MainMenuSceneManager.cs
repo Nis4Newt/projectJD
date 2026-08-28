@@ -35,9 +35,7 @@ namespace JungleDice.MainMenu
 
         private void RefreshDeckCards()
         {
-            var friends = UserManager.Current.Friends; // 항상 3개(UserData 기본값이자 SetFriends 호출부의 불변 조건)
-            for (int i = 0; i < _deckCards.Length; i++)
-                _deckCards[i].SetKey(friends[i]);
+            FriendDeckDisplay.Apply(_deckCards, UserManager.Current.Friends, (card, key) => card.SetKey(key));
         }
 
         private void OnPlayButtonClicked(GameType type)

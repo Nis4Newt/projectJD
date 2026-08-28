@@ -63,9 +63,7 @@ namespace JungleDice.MainMenu
 
         private void RefreshSlots()
         {
-            var friends = UserManager.Current.Friends; // 항상 3개(UserData 기본값이자 SetFriends 호출부의 불변 조건)
-            for (int i = 0; i < _slots.Length; i++)
-                _slots[i].SetKey(friends[i]);
+            FriendDeckDisplay.Apply(_slots, UserManager.Current.Friends, (slot, key) => slot.SetKey(key));
         }
 
         private void OnListItemClicked(FriendListItem item)
