@@ -53,9 +53,9 @@ private void RefreshDeckCards()
 
 `MainMenuSceneManager`가 이미 갖고 있던 `_subs`(`CompositeDisposable`)를 그대로 재사용한다 — `OnDestroy()`의 `_subs.Dispose()` 호출도 기존과 동일, 추가 해제 로직 불필요.
 
-### 3. 별도 클래스로 분리하지 않는다
+### 3. 별도 컴포넌트로 분리하지 않고 `MainMenuSceneManager`에 합친다
 
-처음엔 `AdventureDeckView`라는 별도 `MonoBehaviour`로 만들었으나, 표시 로직이 3줄짜리 루프 하나뿐이고 이 씬에 이미 진입점 성격의 `MainMenuSceneManager`가 있어 컴포넌트를 쪼갤 이유가 없다는 판단으로 통합했다. 구독/해제 인프라(`_subs`)도 중복 없이 공유한다.
+표시 로직이 3줄짜리 루프 하나뿐이고, 이 씬에는 이미 진입점 성격의 `MainMenuSceneManager`가 있다 — 이 정도 규모의 뷰를 위해 별도 클래스와 구독/Dispose 인프라를 새로 만들 이유가 없다. 구독/해제 인프라(`_subs`)도 중복 없이 공유한다.
 
 ---
 
