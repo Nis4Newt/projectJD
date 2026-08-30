@@ -10,6 +10,7 @@ namespace JungleDice.MainMenu
         [SerializeField] private FriendTabController _controller;
 
         public int Index => _index;
+        public int Key => _item.Key;
 
         private void Awake() => _item.Clicked += _ => _controller.OnSlotClicked(_index);
 

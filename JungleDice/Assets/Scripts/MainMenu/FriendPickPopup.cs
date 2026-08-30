@@ -21,10 +21,11 @@ namespace JungleDice.MainMenu
             _closeButton.onClick.AddListener(OnCloseButtonClicked);
         }
 
-        public void Show(int key, Action onSelect)
+        public void Show(int key, Action onSelect, bool selectable = true)
         {
             _friendCard.SetKey(key);
             _onSelect = onSelect;
+            _selectButton.interactable = selectable;
             gameObject.SetActive(true);
         }
 

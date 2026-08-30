@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using JungleDice.Core.Event;
 using UnityEngine;
 
@@ -13,7 +14,13 @@ namespace JungleDice.Core.User
         [SerializeField] private int _ticket;
         [SerializeField] private int _score;
         [SerializeField] private int _rank;
-        [SerializeField] private List<int> _friends = new() { 1004, 1016, 1019 };
+        [SerializeField] private List<int[]> _decks = new()
+        {
+            new[] { 1001, 1012, 1003 },
+            new[] { 1004, 1005, 1006 },
+            new[] { 1007, 1008, 1009 },
+        };
+        [SerializeField] private int _currentDeckIndex;
         [SerializeField] private string _icon = "";
         [SerializeField] private int _nextStage = 1;
 
@@ -22,7 +29,9 @@ namespace JungleDice.Core.User
         public int Ticket => _ticket;
         public int Score => _score;
         public int Rank => _rank;
-        public IReadOnlyList<int> Friends => _friends;
+        public IReadOnlyList<int> Friends => _decks[_currentDeckIndex];
+        public int CurrentDeckIndex => _currentDeckIndex;
+        public int DeckCount => _decks.Count;
         public string Icon => _icon;
         public int NextStage => _nextStage;
 
@@ -74,8 +83,14 @@ namespace JungleDice.Core.User
 
         public void SetFriends(IEnumerable<int> cardIds)
         {
-            _friends.Clear();
-            _friends.AddRange(cardIds);
+            _decks[_currentDeckIndex] = cardIds.ToArray();
+            EventBus.Publish(new UserDataChanged());
+        }
+
+        public void SelectDeck(int index)
+        {
+            if (index < 0 || index >= _decks.Count || index == _currentDeckIndex) return;
+            _currentDeckIndex = index;
             EventBus.Publish(new UserDataChanged());
         }
 

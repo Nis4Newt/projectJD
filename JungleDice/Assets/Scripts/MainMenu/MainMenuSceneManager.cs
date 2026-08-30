@@ -2,6 +2,8 @@ using JungleDice.Core;
 using JungleDice.Core.Event;
 using JungleDice.Core.Settings;
 using JungleDice.Core.UI;
+using JungleDice.Core.User;
+using JungleDice.InGame;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +15,7 @@ namespace JungleDice.MainMenu
         [SerializeField] private Button _battleButton;
         [SerializeField] private Button _optionButton;
         [SerializeField] private Transform _canvasTransform;
+        [SerializeField] private Friend[] _deckCards; // 모험탭 덱 미리보기 3개, UserData.Friends 인덱스와 1:1
 
         private OptionPanel _optionPanel;
         private readonly CompositeDisposable _subs = new();
@@ -25,6 +28,14 @@ namespace JungleDice.MainMenu
             _soloButton.onClick.AddListener(() => OnPlayButtonClicked(GameType.Solo));
             _battleButton.onClick.AddListener(() => OnPlayButtonClicked(GameType.Battle));
             _optionButton.onClick.AddListener(_optionPanel.Show);
+
+            RefreshDeckCards();
+            _subs.Add(EventBus.Subscribe<UserDataChanged>(_ => RefreshDeckCards()));
+        }
+
+        private void RefreshDeckCards()
+        {
+            FriendDeckDisplay.Apply(_deckCards, UserManager.Current.Friends, (card, key) => card.SetKey(key));
         }
 
         private void OnPlayButtonClicked(GameType type)
