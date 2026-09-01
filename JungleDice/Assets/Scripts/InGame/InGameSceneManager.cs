@@ -122,8 +122,8 @@ namespace JungleDice.InGame
             _computerDeck = DeckBuilder.Build(stageFriends);
             _computerInitialDeckSize = _computerDeck.Count; // ComputerAI의 "예상 잔여 턴수 가중치" 정규화 기준
 
-            Debug.Log($"[InGame] 유저 덱: {string.Join(", ", _userDeck)}");
-            Debug.Log($"[InGame] 컴퓨터 덱: {string.Join(", ", _computerDeck)}");
+            InGameLog.Log(() => $"유저 덱: {string.Join(", ", _userDeck)}");
+            InGameLog.Log(() => $"컴퓨터 덱: {string.Join(", ", _computerDeck)}");
         }
 
         private void StartMatch()
@@ -139,7 +139,7 @@ namespace JungleDice.InGame
             switch (phase)
             {
                 case TurnPhase.PlayFriend:
-                    Debug.Log($"[InGame] {_currentOwner} 턴 - 친구카드 플레이");
+                    InGameLog.Log(() => $"{_currentOwner} 턴 - 친구카드 플레이");
                     if (_currentOwner == TurnOwner.User)
                     {
                         if (DrawHandCards()) return; // 덱 소진 피해로 게임오버 — 턴 진행 중단
@@ -157,7 +157,7 @@ namespace JungleDice.InGame
                 case TurnPhase.RollAttacker:
                 {
                     int attackerRoll = Random.Range(1, 7);
-                    Debug.Log($"[InGame] {_currentOwner} 턴 - 공격 주사위: {attackerRoll}");
+                    InGameLog.Log(() => $"{_currentOwner} 턴 - 공격 주사위: {attackerRoll}");
 
                     var attackerSlot = GetFieldSlot(attackerRoll);
                     _attackerSlot = attackerSlot.IsOccupied ? attackerSlot : null;
@@ -165,7 +165,7 @@ namespace JungleDice.InGame
                     if (_attackerSlot == null)
                     {
                         // 공격자가 없으면 RollTarget으로 넘어가지 않고 곧바로 턴 종료
-                        Debug.Log($"[InGame] {_currentOwner} 턴 - 공격자 없음, 턴 종료");
+                        InGameLog.Log(() => $"{_currentOwner} 턴 - 공격자 없음, 턴 종료");
                         _actionButtonText.text = "상대 턴";
                         _actionButton.interactable = false;
                         StartCoroutine(SwitchTurnAfterDelay());
@@ -184,7 +184,7 @@ namespace JungleDice.InGame
                 case TurnPhase.RollTarget:
                 {
                     int targetRoll = Random.Range(1, 7);
-                    Debug.Log($"[InGame] {_currentOwner} 턴 - 타겟 주사위: {targetRoll}");
+                    InGameLog.Log(() => $"{_currentOwner} 턴 - 타겟 주사위: {targetRoll}");
 
                     _actionButtonText.text = "상대 턴";
                     _actionButton.interactable = false;
@@ -252,7 +252,7 @@ namespace JungleDice.InGame
             if (destroyedBase.CurrentHp > 0) return false;
 
             _userWon = destroyedBase == _computerBase; // 컴퓨터 본체가 파괴되면 유저 승리
-            Debug.Log($"[InGame] {(destroyedBase == _computerBase ? "Computer" : "User")} 본체 파괴 — {(_userWon ? "승리" : "패배")}");
+            InGameLog.Log(() => $"{(destroyedBase == _computerBase ? "Computer" : "User")} 본체 파괴 — {(_userWon ? "승리" : "패배")}");
             GameManager.Instance.ChangeState(GameState.GameOver);
             return true;
         }
@@ -352,7 +352,7 @@ namespace JungleDice.InGame
         {
             if (_userDeck.Count == 0)
             {
-                Debug.LogWarning("[InGame] User 덱 소진 — 드로우 대신 본체 피해 1");
+                InGameLog.Warning(() => "User 덱 소진 — 드로우 대신 본체 피해 1");
                 _userBase.TakeDamage(1);
                 return TryEndGameIfBaseDestroyed(_userBase);
             }
@@ -378,7 +378,7 @@ namespace JungleDice.InGame
             int key = _userDeck[0];
             _userDeck.RemoveAt(0);
 
-            Debug.LogWarning($"[InGame] User 풀 핸드 드로우 — key={key} 카드 파괴됨");
+            InGameLog.Warning(() => $"User 풀 핸드 드로우 — key={key} 카드 파괴됨");
 
             SpawnCardAtDeck(key).Discard(_drawDuration);
         }
@@ -488,14 +488,14 @@ namespace JungleDice.InGame
         {
             if (_computerDeck.Count == 0)
             {
-                Debug.LogWarning("[InGame] Computer 덱 소진 — 드로우 대신 본체 피해 1");
+                InGameLog.Warning(() => "Computer 덱 소진 — 드로우 대신 본체 피해 1");
                 _computerBase.TakeDamage(1);
                 return TryEndGameIfBaseDestroyed(_computerBase);
             }
 
             if (_computerHand.Count == ComputerHandSize)
             {
-                Debug.LogWarning($"[InGame] Computer 풀 핸드 드로우 — key={_computerDeck[0]} 카드 파괴됨");
+                InGameLog.Warning(() => $"Computer 풀 핸드 드로우 — key={_computerDeck[0]} 카드 파괴됨");
                 _computerDeck.RemoveAt(0); // 풀 핸드 드로우 — 화면에 없는 손패라 파괴 연출 없이 그대로 버려짐
                 return false;
             }
@@ -523,14 +523,14 @@ namespace JungleDice.InGame
                 var action = ComputerAI.DecideNextAction(BuildObservation(), aiState, playerState);
                 if (!action.HasValue) break;
 
-                Debug.Log($"[InGame] Computer 행동: key={action.Value.Key}, slot={action.Value.SlotIndex}, merge={action.Value.IsMerge}");
+                InGameLog.Log(() => $"Computer 행동: key={action.Value.Key}, slot={action.Value.SlotIndex}, merge={action.Value.IsMerge}");
                 ExecuteComputerAction(action.Value);
                 actionCount++;
 
                 yield return new WaitForSeconds(ComputerActionInterval);
             }
 
-            Debug.Log($"[InGame] Computer 턴 종료 — 이번 턴 행동 횟수: {actionCount}");
+            InGameLog.Log(() => $"Computer 턴 종료 — 이번 턴 행동 횟수: {actionCount}");
             StartCoroutine(ComputerAdvanceAfterDelay(TurnPhase.PlayFriend));
         }
 
