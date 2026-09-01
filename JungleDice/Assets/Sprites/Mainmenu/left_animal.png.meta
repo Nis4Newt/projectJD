@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 3cd38472ff4bab14dabb3ea2638ae994
+guid: 6d1c2a5f04898fe4e9999346c1ba318f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -3860615393548345344
-    second: animal_b_0
+      213: 1769719564112253084
+    second: left_animal_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -52,7 +52,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 90
-  spriteBorder: {x: 500, y: 300, z: 30, w: 400}
+  spriteBorder: {x: 85, y: 0, z: 565, w: 140}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: animal_b_0
+      name: left_animal_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 268
+        y: 0
         width: 1024
-        height: 1528
+        height: 1012
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: 000652501c65c6ac0800000000000000
-      internalID: -3860615393548345344
+      spriteID: c9058f2319e4f8810800000000000000
+      internalID: 1769719564112253084
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      animal_b_0: -3860615393548345344
+      left_animal_0: 1769719564112253084
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 
