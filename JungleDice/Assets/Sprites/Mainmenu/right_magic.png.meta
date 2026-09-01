@@ -1,10 +1,10 @@
 fileFormatVersion: 2
-guid: 366cce1bf743990419bb79b86ea489c3
+guid: 676e4601b73caed44be9d933ef262e3f
 TextureImporter:
   internalIDToNameTable:
   - first:
-      213: -7377334419992116051
-    second: magic_b_0
+      213: 7469965588165893466
+    second: right_magic_0
   externalObjects: {}
   serializedVersion: 13
   mipmaps:
@@ -52,7 +52,7 @@ TextureImporter:
   alignment: 0
   spritePivot: {x: 0.5, y: 0.5}
   spritePixelsToUnits: 90
-  spriteBorder: {x: 30, y: 300, z: 500, w: 400}
+  spriteBorder: {x: 565, y: 0, z: 85, w: 140}
   spriteGenerateFallbackPhysicsShape: 1
   alphaUsage: 1
   alphaIsTransparency: 1
@@ -113,13 +113,13 @@ TextureImporter:
     serializedVersion: 2
     sprites:
     - serializedVersion: 2
-      name: magic_b_0
+      name: right_magic_0
       rect:
         serializedVersion: 2
         x: 0
-        y: 279
+        y: 0
         width: 1024
-        height: 1524
+        height: 1019
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
@@ -128,8 +128,8 @@ TextureImporter:
       physicsShape: []
       tessellationDetail: -1
       bones: []
-      spriteID: da48b1b8e617e9990800000000000000
-      internalID: -7377334419992116051
+      spriteID: a5d1507ff16aaa760800000000000000
+      internalID: 7469965588165893466
       vertices: []
       indices: 
       edges: []
@@ -148,7 +148,7 @@ TextureImporter:
     spriteCustomMetadata:
       entries: []
     nameFileIdTable:
-      magic_b_0: -7377334419992116051
+      right_magic_0: 7469965588165893466
   mipmapLimitGroupName: 
   pSDRemoveMatte: 0
   userData: 

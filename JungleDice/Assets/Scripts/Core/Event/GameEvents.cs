@@ -34,4 +34,7 @@ namespace JungleDice.Core.Event
 
     // 설정 시스템 — 볼륨/진동/언어 변경 알림 (plan-settingssystem.md)
     public record SettingsChanged();
+
+    // UI 시스템 — 팝업 스택 변경 알림 (plan-uimanager-popupstack.md)
+    public record PopupStackChanged(bool HasOpenPanel);
 }
