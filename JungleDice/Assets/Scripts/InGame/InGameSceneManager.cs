@@ -59,8 +59,13 @@ namespace JungleDice.InGame
         [SerializeField] private Button _settingsButton;
         [SerializeField] private Transform _canvasTransform;
 
+        [SerializeField] private RectTransform _handPanelRect; // "hand" 패널 RectTransform — 화면비에 따라 폭 조정 대상
+        [SerializeField] private ScreenSizeChangeNotifier _screenSizeChangeNotifier; // Canvas 루트에 부착된 화면 크기 변경 알림
+
         private OptionPanel _optionPanel;
         private readonly CompositeDisposable _subs = new();
+
+        private float _originalHandPanelWidth; // OnAwake에서 최초 1회 캡처한 hand 패널의 디자인 원본 폭(sizeDelta.x)
 
         private List<int> _userDeck;
         private List<int> _computerDeck;
@@ -82,6 +87,10 @@ namespace JungleDice.InGame
 
         protected override void OnAwake()
         {
+            _originalHandPanelWidth = _handPanelRect.sizeDelta.x;
+            ResizeHandPanelToScreen();
+            _screenSizeChangeNotifier.OnScreenSizeChanged += ResizeHandPanelToScreen;
+
             _subs.Add(EventBus.Subscribe<GameStateChanged>(OnGameStateChanged));
 
             if (GameSession.CurrentGameType != GameType.Solo) return; // Battle 모드는 범위 밖
@@ -93,6 +102,19 @@ namespace JungleDice.InGame
             _actionButton.onClick.AddListener(OnActionButtonClicked);
             _settingsButton.onClick.AddListener(_optionPanel.Show);
             StartMatch();
+        }
+
+        // 화면 가로(캔버스 단위)가 hand 패널의 원본 폭보다 좁으면 화면 가로에 맞춰 축소하고, 넓으면 원본 폭으로 되돌린다.
+        // HandSlot 4개는 hand 내부 HorizontalLayoutGroup(childControlWidth)이 비례 축소를 알아서 처리한다.
+        private void ResizeHandPanelToScreen()
+        {
+            float screenWidthInCanvasUnits = ((RectTransform)_canvasTransform).rect.width;
+            float targetWidth = Mathf.Min(_originalHandPanelWidth, screenWidthInCanvasUnits);
+
+            if (Mathf.Approximately(_handPanelRect.sizeDelta.x, targetWidth)) return; // 변경 없음 — 불필요한 리빌드 방지
+
+            _handPanelRect.sizeDelta = new Vector2(targetWidth, _handPanelRect.sizeDelta.y);
+            LayoutRebuilder.ForceRebuildLayoutImmediate(_handPanelRect); // HandSlot 위치를 즉시 재계산 — DrawHandCards가 같은 프레임에 slot.transform.position을 읽음
         }
 
         private void OnGameStateChanged(GameStateChanged e)
