@@ -83,5 +83,6 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 - [x] [plan-ingame-graveyard.md](plan-ingame-graveyard.md) 구현 — 진영별 무덤(파괴 기록) 리스트
 - [x] [plan-ingame-draw.md](plan-ingame-draw.md) 구현 — 드로우 예외 처리(풀 핸드/덱 소진)
 - [ ] [plan-ingame-log.md](plan-ingame-log.md) 구현 — 인게임 진행 로그 래핑(`InGameLog`) + 에디터 on/off 토글
+- [ ] [plan-ingame-handpanel-responsive.md](plan-ingame-handpanel-responsive.md) 구현 — hand 패널 화면비 대응(화면이 좁으면 폭 축소)
 - [ ] (추후) 컴퓨터 진영 결과 위젯
 - [ ] (추후) `GameType.Battle` 모드의 InGame 로직 별도 계획 문서
