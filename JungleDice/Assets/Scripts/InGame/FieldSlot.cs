@@ -8,13 +8,17 @@ namespace JungleDice.InGame
         [SerializeField] private int _index; // 전체 필드 6자리 중 절대 번호(플레이어는 4/5/6)
 
         public int Index => _index;
-        public bool IsOccupied => transform.childCount > 0;
+        public WorldFriend PlacedFriend { get; private set; }
+        public bool IsOccupied => PlacedFriend != null;
+
+        public void PlaceFriend(WorldFriend friend) => PlacedFriend = friend;
+        public void RemoveFriend() => PlacedFriend = null;
 
         public void OnDrop(PointerEventData eventData)
-        {
+        {            
             var card = eventData.pointerDrag != null ? eventData.pointerDrag.GetComponent<FriendCardBattleControl>() : null;
             if (card == null) return; // FriendCardBattleControl이 아닌 다른 드래그 대상은 무시(현재는 존재하지 않지만 방어)
-
+            
             InGameSceneManager.Instance.TryPlaceFriendCard(this, card);
         }
     }
