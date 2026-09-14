@@ -13,7 +13,13 @@ namespace JungleDice.InGame
         [SerializeField] private SpriteRenderer _cardRenderer;
         [SerializeField] private TextMeshPro _attText;
         [SerializeField] private TextMeshPro _hpText;
-        [SerializeField] private SpriteRenderer _highlightRenderer; // 카드 전체를 덮는 하이라이트 오버레이, 기본 비활성화
+        [SerializeField] private ParticleSystem _highlightRenderer; // 카드 전체를 덮는 하이라이트 오버레이(파티클), 기본 비활성화
+        [SerializeField] private ParticleSystemRenderer _highlightRendererMaterial; // _highlightRenderer와 같은 오브젝트 — 베이스맵 텍스처 제어용
+
+        private void Awake()
+        {
+            SetHighlight(false, Color.clear); // 프리팹 기본 상태가 활성화라 코드에서 명시적으로 꺼둔다
+        }
 
         public int Key { get; private set; }
         public int Att { get; private set; }
@@ -54,6 +60,8 @@ namespace JungleDice.InGame
             MaxHp = data.hp;
 
             _cardRenderer.sprite = SpriteManager.GetCard(key.ToString());
+            SetHighlightTexture(key);
+
             _attText.text = Att.ToString();
             _attText.color = Color.white;
             _hpText.text = CurrentHp.ToString();
@@ -198,10 +206,19 @@ namespace JungleDice.InGame
             return current > previous ? Color.green : Color.red;
         }
 
+        // 파티클 vertex color(main.startColor)는 이 프로젝트의 파티클 머티리얼 조합에서 렌더링에 반영되지 않아,
+        // 색상은 SetHighlightTexture와 동일하게 머티리얼의 _BaseColor로 직접 적용한다.
         public void SetHighlight(bool on, Color color)
         {
-            _highlightRenderer.color = color;
+            _highlightRendererMaterial.material.SetColor("_BaseColor", color);
             _highlightRenderer.gameObject.SetActive(on);
+        }
+
+        // 카드별 하이라이트 이미지를 파티클 머티리얼 베이스맵에 적용 — {key}_shadow 리소스가 없으면 경고 로그만 남고 베이스맵은 비워짐
+        private void SetHighlightTexture(int key)
+        {
+            var shadowSprite = SpriteManager.GetCard($"{key}_shadow");
+            _highlightRendererMaterial.material.SetTexture("_BaseMap", shadowSprite != null ? shadowSprite.texture : null);
         }
 
         // vibrato를 1로 둬 "커졌다 바로 돌아오는" 단일 펀치로 — 기본값(10)은 여러 번 진동해 목적에 맞지 않음
