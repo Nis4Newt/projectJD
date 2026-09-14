@@ -476,6 +476,7 @@ namespace JungleDice.InGame
                 if (!CanMerge(existing, card.Data.Key)) return; // 병합 불가 — 배치 거부, OnEndDrag가 원래 슬롯으로 복귀시킴
 
                 MergeCardIntoSlot(existing, card.Data.Key, slot.Index);
+                HideMergePreview(); // 병합 성공 — 미리보기로 켜졌던 다른 슬롯 하이라이트도 함께 끈다
 
                 card.NotifyPlaced();
                 Destroy(card.gameObject);
@@ -484,6 +485,7 @@ namespace JungleDice.InGame
 
             var friend = SpawnWorldFriend(slot);
             friend.SetKey(card.Data.Key);
+            HideMergePreview(); // 빈 슬롯 배치 성공 — 미리보기로 켜졌던 다른 슬롯 하이라이트도 함께 끈다
 
             card.NotifyPlaced();
             Destroy(card.gameObject);
