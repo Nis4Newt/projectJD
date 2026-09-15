@@ -67,11 +67,11 @@ namespace JungleDice.InGame
         public void OnEndDrag(PointerEventData eventData)
         {
             _canvasGroup.blocksRaycasts = true;
-            InGameSceneManager.Instance.HideMergePreview(); // 드롭 성공/실패와 무관하게 항상 호출
 
-            if (_wasPlaced) return; // 필드 배치 성공 — 이번 프레임 안에 파괴 예정, 되돌릴 필요 없음
+            if (_wasPlaced) return; // 필드 배치 성공 — TryPlaceFriendCard가 이미 미리보기를 껐고, 이번 프레임 안에 파괴 예정
 
-            AttachToSlot(_homeSlot); // 드롭 실패 — 원래 있던 자기 슬롯으로 즉시 복귀
+            InGameSceneManager.Instance.HideMergePreview(); // 드롭 실패 — 미리보기 해제
+            AttachToSlot(_homeSlot); // 원래 있던 자기 슬롯으로 즉시 복귀
         }
 
         public void NotifyPlaced() => _wasPlaced = true;

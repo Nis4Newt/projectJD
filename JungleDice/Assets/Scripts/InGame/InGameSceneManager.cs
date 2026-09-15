@@ -33,7 +33,7 @@ namespace JungleDice.InGame
         [SerializeField] private TextMeshProUGUI _actionButtonText;
 
         [SerializeField] private FriendCardBattleControl _friendCardPrefab;
-        [SerializeField] private Friend _friendPrefab;
+        [SerializeField] private WorldFriend _worldFriendPrefab;
         [SerializeField] private Transform _deckOrigin;
         [SerializeField] private HandSlot[] _handSlots; // hand의 고정 슬롯 4개, 인덱스 0~3(왼쪽→오른쪽)
         [SerializeField] private Transform _dragLayer;
@@ -41,7 +41,7 @@ namespace JungleDice.InGame
         [SerializeField] private float _drawDuration = 0.3f;
         [SerializeField] private float _compactDuration = 0.25f;
 
-        [SerializeField] private FieldSlot[] _fieldSlots; // 필드 6칸, 배열 인덱스 0~5 = 절대 번호 1~6 (1/2/3 컴퓨터, 4/5/6 유저)
+        [SerializeField] private FieldSlot[] _fieldSlots; // 필드 6칸, 배열 인덱스 0~5 = 절대 번호 1~6 (1/2/3 컴퓨터, 4/5/6 유저) — Inspector 등록 순서와 무관하게 OnAwake에서 Index 기준으로 정렬해둔다
         [SerializeField] private Transform _attackLayer; // 공격 연출 도중 attacker가 다른 슬롯/카드 위로 그려지도록 임시로 옮겨가는 레이어(_dragLayer와 같은 역할)
         [SerializeField] private BaseStone _userBase;
         [SerializeField] private BaseStone _computerBase;
@@ -94,6 +94,8 @@ namespace JungleDice.InGame
             _subs.Add(EventBus.Subscribe<GameStateChanged>(OnGameStateChanged));
 
             if (GameSession.CurrentGameType != GameType.Solo) return; // Battle 모드는 범위 밖
+
+            _fieldSlots = _fieldSlots.OrderBy(slot => slot.Index).ToArray(); // 이후 GetFieldSlot이 배열 인덱스로 바로 접근할 수 있도록 Index 기준 정렬
 
             SetupDecks();
 
@@ -194,7 +196,7 @@ namespace JungleDice.InGame
                         return; // 아래의 컴퓨터 자동 진행도 걸지 않음 — 이미 턴 종료 코루틴을 시작함
                     }
 
-                    var attacker = _attackerSlot.GetComponentInChildren<Friend>();
+                    var attacker = _attackerSlot.PlacedFriend;
                     attacker.SetHighlight(true, Color.red);
                     attacker.PunchScale(_selectPunchScale, _selectPunchDuration);
 
@@ -256,6 +258,15 @@ namespace JungleDice.InGame
 
         private FieldSlot GetFieldSlot(int rollValue) => _fieldSlots[rollValue - 1];
 
+        // 슬롯 자식으로 WorldFriend를 생성해 배치까지 마친다 — parent보다 z -1만큼 앞에 그려지도록 위치를 맞추고 슬롯의 PlacedFriend도 갱신한다
+        private WorldFriend SpawnWorldFriend(FieldSlot slot)
+        {
+            var friend = Instantiate(_worldFriendPrefab, slot.transform);
+            friend.SnapDepthToParent();
+            slot.PlaceFriend(friend);
+            return friend;
+        }
+
         private BaseStone GetBase(int slotIndex) => slotIndex <= 3 ? _computerBase : _userBase;
 
         // slotIndex(필드 절대 번호 1~6)로 소유 진영을 판정해 그 진영의 무덤에 key를 저장한다 — GetBase와 동일한 기준(1~3 컴퓨터, 4~6 유저)
@@ -282,8 +293,8 @@ namespace JungleDice.InGame
         // RollAttacker에서 공격자가 없으면 이 코루틴 자체가 시작되지 않으므로, _attackerSlot은 항상 점유된 슬롯이다.
         private IEnumerator ResolveAttackRoutine(FieldSlot targetSlot)
         {
-            var attacker = _attackerSlot.GetComponentInChildren<Friend>();
-            var targetFriend = targetSlot.IsOccupied ? targetSlot.GetComponentInChildren<Friend>() : null;
+            var attacker = _attackerSlot.PlacedFriend;
+            var targetFriend = targetSlot.PlacedFriend;
 
             if (targetFriend != null)
             {
@@ -461,18 +472,20 @@ namespace JungleDice.InGame
         {
             if (slot.IsOccupied)
             {
-                var existing = slot.GetComponentInChildren<Friend>();
+                var existing = slot.PlacedFriend;
                 if (!CanMerge(existing, card.Data.Key)) return; // 병합 불가 — 배치 거부, OnEndDrag가 원래 슬롯으로 복귀시킴
 
                 MergeCardIntoSlot(existing, card.Data.Key, slot.Index);
+                HideMergePreview(); // 병합 성공 — 미리보기로 켜졌던 다른 슬롯 하이라이트도 함께 끈다
 
                 card.NotifyPlaced();
                 Destroy(card.gameObject);
                 return;
             }
 
-            var friend = Instantiate(_friendPrefab, slot.transform);
+            var friend = SpawnWorldFriend(slot);
             friend.SetKey(card.Data.Key);
+            HideMergePreview(); // 빈 슬롯 배치 성공 — 미리보기로 켜졌던 다른 슬롯 하이라이트도 함께 끈다
 
             card.NotifyPlaced();
             Destroy(card.gameObject);
@@ -480,11 +493,11 @@ namespace JungleDice.InGame
 
         // 병합 가능 판정 자체는 ComputerAI.CanMerge(key 기반, Unity 비의존)에 위임한다 — 판정 로직은 하나만 존재해야
         // 컴퓨터 AI의 후보 탐색과 유저 드래그 배치가 항상 같은 결과를 보장한다.
-        private bool CanMerge(Friend existing, int mergeKey) => ComputerAI.CanMerge(existing.Key, mergeKey);
+        private bool CanMerge(WorldFriend existing, int mergeKey) => ComputerAI.CanMerge(existing.Key, mergeKey);
 
         // existing에 mergeKey 카드의 기본 스탯을 합산 + 연출 + 발동 효과. 호출 전 CanMerge로 이미 통과된 조합이라고 가정한다.
         // slotIndex는 existing이 실제로 놓인 필드 절대 번호(1~6) — "내 필드"/"상대 필드"를 이 위치 기준으로 판정한다(고정된 유저=Ally 아님, 치트로 컴퓨터 필드에서 병합해도 정확히 동작해야 함)
-        private void MergeCardIntoSlot(Friend existing, int mergeKey, int slotIndex)
+        private void MergeCardIntoSlot(WorldFriend existing, int mergeKey, int slotIndex)
         {
             var existingData = CardTable.Instance.Get(existing.Key);
             var data = CardTable.Instance.Get(mergeKey);
@@ -584,7 +597,7 @@ namespace JungleDice.InGame
             {
                 var slot = GetFieldSlot(i);
                 if (!slot.IsOccupied) continue;
-                var friend = slot.GetComponentInChildren<Friend>();
+                var friend = slot.PlacedFriend;
                 result.Add(new FriendSnapshot(i, friend.Key, friend.Att, friend.CurrentHp, friend.MaxHp));
             }
             return result;
@@ -598,12 +611,12 @@ namespace JungleDice.InGame
             var slot = GetFieldSlot(action.SlotIndex);
             if (action.IsMerge)
             {
-                var existing = slot.GetComponentInChildren<Friend>();
+                var existing = slot.PlacedFriend;
                 MergeCardIntoSlot(existing, action.Key, action.SlotIndex);
             }
             else
             {
-                var friend = Instantiate(_friendPrefab, slot.transform);
+                var friend = SpawnWorldFriend(slot);
                 friend.SetKey(action.Key);
             }
         }
@@ -614,7 +627,8 @@ namespace JungleDice.InGame
             var slot = GetFieldSlot(slotIndex);
             if (!slot.IsOccupied) return;
 
-            Destroy(slot.GetComponentInChildren<Friend>().gameObject);
+            Destroy(slot.PlacedFriend.gameObject);
+            slot.RemoveFriend();
         }
 
         // 슬롯에 key를 강제로 채운다 — 점유돼 있으면 기존 카드를 먼저 제거하고 새로 채운다(치트 전용, 병합 규칙을 타지 않고 항상 덮어씀)
@@ -623,7 +637,7 @@ namespace JungleDice.InGame
             CheatClearSlot(slotIndex);
 
             var slot = GetFieldSlot(slotIndex);
-            var friend = Instantiate(_friendPrefab, slot.transform);
+            var friend = SpawnWorldFriend(slot);
             friend.SetKey(key);
         }
 
@@ -637,7 +651,7 @@ namespace JungleDice.InGame
                 return;
             }
 
-            var existing = slot.GetComponentInChildren<Friend>();
+            var existing = slot.PlacedFriend;
             if (!CanMerge(existing, mergeKey))
             {
                 Debug.LogWarning($"[Cheat] 슬롯 {slotIndex}(key={existing.Key})에 key={mergeKey}를 합칠 수 없습니다 — 같은 종류가 아니고 target(All/Any) 조건도 만족하지 않습니다.");
@@ -647,7 +661,7 @@ namespace JungleDice.InGame
             MergeCardIntoSlot(existing, mergeKey, slotIndex);
         }
 
-        // 슬롯의 카드에 데미지를 강제로 입힌다 — Friend.TakeDamage를 그대로 재사용(방어막 소모 포함), 죽으면 TryHandleDeath로 정상 사망 처리(부활/포자감염 포함)와 동일하게 처리
+        // 슬롯의 카드에 데미지를 강제로 입힌다 — WorldFriend.TakeDamage를 그대로 재사용(방어막 소모 포함), 죽으면 TryHandleDeath로 정상 사망 처리(부활/포자감염 포함)와 동일하게 처리
         public void CheatDamageSlot(int slotIndex, int amount)
         {
             var slot = GetFieldSlot(slotIndex);
@@ -657,7 +671,7 @@ namespace JungleDice.InGame
                 return;
             }
 
-            var friend = slot.GetComponentInChildren<Friend>();
+            var friend = slot.PlacedFriend;
             friend.TakeDamage(amount);
 
             if (friend.IsDead) TryHandleDeath(friend, slot.transform);
@@ -670,7 +684,7 @@ namespace JungleDice.InGame
             foreach (var slot in _fieldSlots)
             {
                 if (slot.Index < UserFieldStart || !slot.IsOccupied) continue;
-                var friend = slot.GetComponentInChildren<Friend>();
+                var friend = slot.PlacedFriend;
                 if (CanMerge(friend, draggedKey)) friend.SetHighlight(true, Color.green);
             }
         }
@@ -680,7 +694,7 @@ namespace JungleDice.InGame
             foreach (var slot in _fieldSlots)
             {
                 if (slot.Index < UserFieldStart || !slot.IsOccupied) continue;
-                slot.GetComponentInChildren<Friend>().SetHighlight(false, Color.clear);
+                slot.PlacedFriend.SetHighlight(false, Color.clear);
             }
         }
 
@@ -695,18 +709,18 @@ namespace JungleDice.InGame
         private (int Start, int End) OpponentFieldRange(int slotIndex) =>
             slotIndex <= ComputerFieldEnd ? (UserFieldStart, UserFieldEnd) : (ComputerFieldStart, ComputerFieldEnd);
 
-        private List<Friend> GetFieldFriends(int fromIndex, int toIndex)
+        private List<WorldFriend> GetFieldFriends(int fromIndex, int toIndex)
         {
-            var result = new List<Friend>();
+            var result = new List<WorldFriend>();
             for (int i = fromIndex; i <= toIndex; i++)
             {
                 var slot = GetFieldSlot(i);
-                if (slot.IsOccupied) result.Add(slot.GetComponentInChildren<Friend>());
+                if (slot.IsOccupied) result.Add(slot.PlacedFriend);
             }
             return result;
         }
 
-        private Friend PickRandomTargetable(List<Friend> candidates)
+        private WorldFriend PickRandomTargetable(List<WorldFriend> candidates)
         {
             candidates.RemoveAll(f => CardTable.Instance.GetCond(f.Key) == CardCondition.Except);
             return candidates.Count == 0 ? null : candidates[Random.Range(0, candidates.Count)];
@@ -714,7 +728,7 @@ namespace JungleDice.InGame
 
         // 병합 직후 발동 효과 — scope로 대상을, EffectClauses로 동작을 결정한다(카드 key로 분기하지 않음).
         // slotIndex는 existing이 실제로 놓인 필드 절대 번호 — Ally/Enemy는 이 위치를 기준으로 판정한다(유저=Ally 고정 아님)
-        private void TriggerMergeAbility(Friend existing, int slotIndex)
+        private void TriggerMergeAbility(WorldFriend existing, int slotIndex)
         {
             var data = CardTable.Instance.Get(existing.Key);
             if (data.cond != CardCondition.Merge) return;
@@ -753,8 +767,8 @@ namespace JungleDice.InGame
             }
         }
 
-        // Friend 대상 — 조각의 종류(Kind)별로 적용. 적용 후 죽었으면(능력엔 복귀 연출이 없으므로) 그 자리에서 즉시 제거
-        private void ApplyClausesToFriend(List<CardEffectClause> clauses, Friend target)
+        // WorldFriend 대상 — 조각의 종류(Kind)별로 적용. 적용 후 죽었으면(능력엔 복귀 연출이 없으므로) 그 자리에서 즉시 제거
+        private void ApplyClausesToFriend(List<CardEffectClause> clauses, WorldFriend target)
         {
             if (target == null) return;
 
@@ -796,8 +810,10 @@ namespace JungleDice.InGame
 
             if (target.IsDead)
             {
-                AddToGraveyard(target.transform.parent.GetComponent<FieldSlot>().Index, target.Key);
+                var slot = target.transform.parent.GetComponent<FieldSlot>();
+                AddToGraveyard(slot.Index, target.Key);
                 Destroy(target.gameObject);
+                slot.RemoveFriend();
             }
         }
 
@@ -816,8 +832,8 @@ namespace JungleDice.InGame
             TryEndGameIfBaseDestroyed(target);
         }
 
-        // 사망 확정된 Friend를 부활/포자감염 규칙에 따라 처리한다. true를 반환하면 부활 성공 — 파괴하지 않고 필드에 남긴다.
-        private bool TryHandleDeath(Friend friend, Transform slotTransform)
+        // 사망 확정된 WorldFriend를 부활/포자감염 규칙에 따라 처리한다. true를 반환하면 부활 성공 — 파괴하지 않고 필드에 남긴다.
+        private bool TryHandleDeath(WorldFriend friend, Transform slotTransform)
         {
             var data = CardTable.Instance.Get(friend.Key);
             if (data.cond == CardCondition.Die)
@@ -834,15 +850,17 @@ namespace JungleDice.InGame
 
             bool hasSpawnMark = friend.SpawnMark.HasMark;
             int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
-            AddToGraveyard(slotTransform.GetComponent<FieldSlot>().Index, friend.Key);
+            var deadSlot = slotTransform.GetComponent<FieldSlot>();
+            AddToGraveyard(deadSlot.Index, friend.Key);
             Destroy(friend.gameObject);
+            deadSlot.RemoveFriend();
             if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
             return false;
         }
 
         private void SpawnFriendDirectly(int key, int att, int hp, Transform slotTransform)
         {
-            var friend = Instantiate(_friendPrefab, slotTransform);
+            var friend = SpawnWorldFriend(slotTransform.GetComponent<FieldSlot>());
             friend.SetKey(key);
             friend.OverrideStats(att, hp);
         }

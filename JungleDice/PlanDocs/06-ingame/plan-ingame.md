@@ -84,5 +84,6 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 - [x] [plan-ingame-draw.md](plan-ingame-draw.md) 구현 — 드로우 예외 처리(풀 핸드/덱 소진)
 - [ ] [plan-ingame-log.md](plan-ingame-log.md) 구현 — 인게임 진행 로그 래핑(`InGameLog`) + 에디터 on/off 토글
 - [ ] [plan-ingame-handpanel-responsive.md](plan-ingame-handpanel-responsive.md) 구현 — hand 패널 화면비 대응(화면이 좁으면 폭 축소)
+- [x] [worldspace/plan-ingame-worldspace.md](worldspace/plan-ingame-worldspace.md) 구현 — 필드 슬롯/본체(`BaseStone`)를 uGUI에서 world space `SpriteRenderer` 기반으로 전환, 필드용 친구카드는 UI 버전(`Friend`)을 유지한 채 world space 버전(`WorldFriend`) 신설
 - [ ] (추후) 컴퓨터 진영 결과 위젯
 - [ ] (추후) `GameType.Battle` 모드의 InGame 로직 별도 계획 문서

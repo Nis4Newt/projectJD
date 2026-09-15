@@ -5,7 +5,7 @@ namespace JungleDice.InGame
 {
     public class BaseStone : MonoBehaviour
     {
-        [SerializeField] private TextMeshProUGUI _hpText;
+        [SerializeField] private TextMeshPro _hpText;
         [SerializeField] private int _maxHp = 30;
 
         public int CurrentHp { get; private set; }
