@@ -3514,7 +3514,7 @@ MonoBehaviour:
   _actionButton: {fileID: 731110506}
   _actionButtonText: {fileID: 153364286}
   _friendCardPrefab: {fileID: 4230983874517856915, guid: 5bc5c794fa799e94bb2c6c592cea2585, type: 3}
-  _worldFriendPrefab: {fileID: 5701260565560703468, guid: dbcd95fe177676d45ad093954c68440b, type: 3}
+  _worldFriendPrefab: {fileID: 1247637306580341692, guid: 3652264994d9f7d42adf1b6696bdd4ad, type: 3}
   _deckOrigin: {fileID: 542117964}
   _handSlots:
   - {fileID: 1289986218}
