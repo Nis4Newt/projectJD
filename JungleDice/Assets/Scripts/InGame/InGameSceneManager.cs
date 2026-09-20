@@ -295,6 +295,7 @@ namespace JungleDice.InGame
         {
             var attacker = _attackerSlot.PlacedFriend;
             var targetFriend = targetSlot.PlacedFriend;
+            attacker.EnterAttack();
 
             if (targetFriend != null)
             {
@@ -346,19 +347,13 @@ namespace JungleDice.InGame
             attacker.MoveTo(originalPosition, _moveBackDuration, Ease.Linear); // 등속 복귀
             yield return new WaitForSeconds(_moveBackDuration);
 
-            if (attackerDied)
-            {
-                bool revived = TryHandleDeath(attacker, _attackerSlot.transform);
-                if (revived)
-                {
-                    attacker.SetParent(_attackerSlot.transform);
-                    attacker.SetHighlight(false, Color.clear);
-                }
-            }
-            else
+            // attackerDied가 false면 TryHandleDeath를 호출하지 않고(단락 평가) 곧바로 true — 죽지 않았거나(생존) 부활에 성공한 경우
+            bool attackerAlive = !attackerDied || TryHandleDeath(attacker, _attackerSlot.transform);
+            if (attackerAlive)
             {
                 attacker.SetParent(_attackerSlot.transform); // 공격 레이어에서 원래 슬롯으로 복귀
                 attacker.SetHighlight(false, Color.clear);
+                attacker.EnterIdle(); // 생존 또는 부활 성공 — Attack 종료, Idle로 복귀
             }
 
             if (targetFriend != null)
@@ -812,8 +807,8 @@ namespace JungleDice.InGame
             {
                 var slot = target.transform.parent.GetComponent<FieldSlot>();
                 AddToGraveyard(slot.Index, target.Key);
-                Destroy(target.gameObject);
                 slot.RemoveFriend();
+                target.Die();
             }
         }
 
@@ -852,8 +847,8 @@ namespace JungleDice.InGame
             int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
             var deadSlot = slotTransform.GetComponent<FieldSlot>();
             AddToGraveyard(deadSlot.Index, friend.Key);
-            Destroy(friend.gameObject);
             deadSlot.RemoveFriend();
+            friend.Die();
             if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
             return false;
         }

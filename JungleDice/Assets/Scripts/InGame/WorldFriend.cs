@@ -8,6 +8,8 @@ namespace JungleDice.InGame
 {
     // 필드에 배치되는 친구카드의 world space 버전 — Friend(UI)와 로직은 동일하고 렌더링 컴포넌트만 다르다.
     // Friend는 MainMenu 덱 미리보기(FriendDeckDisplay)에서 별도로 쓰이고 있어 그대로 두고, 필드는 이 컴포넌트를 쓴다.
+    public enum FriendState { Spawn, Idle, Attack, Dead, Destroying }
+
     public class WorldFriend : MonoBehaviour
     {
         [SerializeField] private SpriteRenderer _cardRenderer;
@@ -15,11 +17,15 @@ namespace JungleDice.InGame
         [SerializeField] private TextMeshPro _hpText;
         [SerializeField] private ParticleSystem _highlightRenderer; // 카드 전체를 덮는 하이라이트 오버레이(파티클), 기본 비활성화
         [SerializeField] private ParticleSystemRenderer _highlightRendererMaterial; // _highlightRenderer와 같은 오브젝트 — 베이스맵 텍스처 제어용
+        [SerializeField] private float _deathShakeDuration = 0.2f;
+        [SerializeField] private float _deathShakeStrength = 0.15f;
 
         private void Awake()
         {
             SetHighlight(false, Color.clear); // 프리팹 기본 상태가 활성화라 코드에서 명시적으로 꺼둔다
         }
+
+        public FriendState State { get; private set; } = FriendState.Spawn;
 
         public int Key { get; private set; }
         public int Att { get; private set; }
@@ -53,7 +59,11 @@ namespace JungleDice.InGame
             Key = key;
 
             var data = CardTable.Instance?.Get(key);
-            if (data == null) return; // CardTable.Get이 이미 LogError를 남김
+            if (data == null)
+            {
+                State = FriendState.Idle; // CardTable.Get이 이미 LogError를 남김 — 상태 전이는 그대로 진행
+                return;
+            }
 
             Att = data.att;
             CurrentHp = data.hp;
@@ -66,6 +76,28 @@ namespace JungleDice.InGame
             _attText.color = Color.white;
             _hpText.text = CurrentHp.ToString();
             _hpText.color = Color.white;
+
+            State = FriendState.Idle; // 스폰 연출 없음 — 즉시 전이. 연출이 생기면 이 한 줄만 지연시키면 됨
+        }
+
+        public void EnterAttack() => State = FriendState.Attack;
+        public void EnterIdle() => State = FriendState.Idle;
+
+        // 사망 확정된 카드를 파괴한다 — 이미 Dead/Destroying이면 무시(같은 프레임에 중복 호출되는 것을 방어)
+        public void Die()
+        {
+            if (State == FriendState.Dead || State == FriendState.Destroying) return;
+
+            State = FriendState.Dead;
+            transform.DOKill();
+            transform.DOShakePosition(_deathShakeDuration, _deathShakeStrength)
+                .OnComplete(EnterDestroying);
+        }
+
+        private void EnterDestroying()
+        {
+            State = FriendState.Destroying;
+            Destroy(gameObject);
         }
 
         public void TakeDamage(int amount)
