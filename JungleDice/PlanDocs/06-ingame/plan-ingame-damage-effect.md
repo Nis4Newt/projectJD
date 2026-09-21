@@ -13,24 +13,22 @@
 
 준비물도 이미 있다: `Assets/Prefabs/attack_0bj.prefab`(배경 `SpriteRenderer` + 자식 `value`의 world space `TextMeshPro`, 텍스트 `"-10"`)와 `Assets/Sprites/damageEff.png`. 아직 어떤 스크립트도 참조하지 않는 미완성 프리팹이라, 이번 문서가 컴포넌트를 붙이고 코드에서 스폰하도록 완성한다.
 
-**설계 검토 과정에서 나온 문제**: 이펙트를 피격 대상의 자식으로 계속 두면, 그 대상이 전투/능력 효과로 파괴될 때 이펙트도 즉시 같이 사라져 데미지 숫자가 끝까지 보이지 않는다(특히 즉사·킬링 블로우에서 가장 보고 싶은 순간에 잘림). 아래 핵심 설계 결정 2번이 이 문제를 다룬다.
-
 ---
 
 ## 설계 목표
 
 - 새 이벤트를 EventBus에 추가하지 않는다 — 데미지 관련 이벤트가 현재 없고, `ResolveAttackRoutine`도 `Friend`/`BaseStone`을 직접 호출하는 관례이므로, 피격 대상 스스로(`TakeDamage` 내부)가 이펙트를 생성해 결합을 늘리지 않는다.
-- 이펙트는 항상 "데미지를 받은 오브젝트 자신"의 자식으로 생성한다 — 공격자가 제자리로 복귀하는 동안 이펙트가 자연히 함께 움직이길 원하고, 별도의 "이동 중엔 이렇게, 복귀 후엔 저렇게" 분기 코드를 만들지 않기 위해서다.
-- 그 오브젝트가 실제로 파괴되는 시점(전투 사망, 능력 효과 사망 모두)에는 예외 없이 이펙트를 안전한 위치(자신의 `FieldSlot`)로 옮긴 뒤 파괴한다 — "죽으면 이펙트도 같이 사라진다"는 문제를 스폰 시점이 아니라 파괴 시점에서 한 곳으로 막는다.
+- 이펙트는 항상 피격 대상 자신의 자식으로 스폰한다 — 부모가 카드냐 슬롯이냐에 따라 다른 위치 상수를 계산하지 않기 위해서다. 안전한 부모(슬롯)로의 승격은 이미 슬롯에 있으면 즉시, 공격 중이면 슬롯 복귀 시점이나 파괴 직전에 `ReleaseDamageEffects`로 처리한다.
+- 카드가 파괴되는 시점(전투 사망, 능력 효과 사망 모두)에는 예외 없이 이펙트가 먼저 슬롯으로 옮겨진 뒤여야 한다 — "죽으면 이펙트도 같이 사라진다"는 문제가 생기지 않게 한다.
 - 오브젝트 풀링은 도입하지 않는다 — 프로젝트 전역에 카드/이펙트용 풀링 인프라가 없고(유일한 풀은 오디오 SFX 8개), 한 판에서 이펙트 스폰 빈도가 낮아 `Instantiate`/`Destroy`로 충분하다(YAGNI).
 
 ---
 
 ## 핵심 설계 결정
 
-### 1. `TakeDamage` 내부에서 자기 자신의 자식으로 스폰
+### 1. 스폰은 항상 피격 대상 자신의 자식으로
 
-`ResolveAttackRoutine`의 세 `TakeDamage` 호출(공격자, 타겟, 베이스)과 능력 효과·치트·덱 소진 페널티가 호출하는 `TakeDamage`까지 한 곳(`TakeDamage` 내부)에서 스폰해야 호출 경로와 무관하게 "데미지를 받는 순간"이 보장된다. 부모는 항상 자기 자신(`transform`)이다 — 공격자가 타격 직후 `MoveTo(originalPosition, ...)`로 복귀하는 동안 이펙트가 자식으로 붙어 있으면 자연히 함께 이동하고, 타겟처럼 움직이지 않는 경우도 위치가 그대로 유지된다.
+`ResolveAttackRoutine`의 세 `TakeDamage` 호출(공격자, 타겟, 베이스)과 능력 효과·치트·덱 소진 페널티가 호출하는 `TakeDamage`까지, 한 곳(`TakeDamage` 내부)에서 스폰해야 호출 경로와 무관하게 "데미지를 받는 순간"이 보장된다. `Instantiate`의 parent는 항상 피격 대상 자신(`transform`)이다 — 최종적으로 슬롯의 자식이 될 경우에도 슬롯을 직접 parent로 넘기지 않는다. `_localDepth`(결정 4)가 "부모가 카드 자신"이라는 전제로 계산된 값이라, 부모가 슬롯이냐 카드냐에 따라 다른 상수를 써야 하는 상황을 피하기 위해서다. 슬롯으로의 승격은 전부 `ReleaseDamageEffects`(결정 2)를 통한 재부모 지정으로만 이뤄진다.
 
 ```csharp
 // WorldFriend.cs
@@ -43,6 +41,7 @@ public void TakeDamage(int amount)
     }
 
     DamageEffect.Spawn(_damageEffectPrefab, transform, amount);
+    if (State != FriendState.Attack) ReleaseDamageEffects(transform.parent); // 공격 중이 아니면 이미 슬롯에 있는 것
 
     int previousHp = CurrentHp;
     CurrentHp = Mathf.Max(0, CurrentHp - amount);
@@ -61,15 +60,13 @@ public void TakeDamage(int amount)
 }
 ```
 
-`BaseStone`은 전투 중 파괴되지 않는 오브젝트라 이 이후의 "파괴 시점 안전 이전" 로직이 필요 없다 — 항상 자기 자신 자식으로 남아도 안전하다.
+`BaseStone`은 슬롯 개념이 없고 전투 중 파괴되지도 않으므로 재부모 지정 없이 항상 자기 자신의 자식으로 남아도 안전하다.
 
-### 2. 파괴 직전 `ReleaseDamageEffects`로 슬롯으로 이전 — 스폰 시점이 아니라 파괴 시점에서 막는다
-
-친구카드가 실제로 `Destroy`되는 지점은 코드에 두 곳뿐이다: 전투/치트 사망 처리(`TryHandleDeath`)와 능력 효과 사망 처리(`ApplyClausesToFriend`). 둘 다 파괴 직전에 이펙트를 자신의 `FieldSlot`으로 옮긴다 — `worldPositionStays: true`로 옮기므로 월드 좌표(따라서 z-depth)가 그대로 보존된다.
+### 2. `ReleaseDamageEffects` — `worldPositionStays`로 위치 재계산 없이 재부모 지정
 
 ```csharp
 // WorldFriend.cs
-// 파괴되기 전 아직 재생 중인 데미지 이펙트를 안전한 부모(보통 자신의 FieldSlot)로 옮긴다 — 이 오브젝트가 사라져도 이펙트는 끝까지 재생된다
+// 아직 재생 중인 데미지 이펙트를 새 부모로 옮긴다 — 이 오브젝트가 사라져도 이펙트는 끝까지 재생된다
 public void ReleaseDamageEffects(Transform newParent)
 {
     foreach (var effect in GetComponentsInChildren<DamageEffect>(includeInactive: true))
@@ -77,18 +74,55 @@ public void ReleaseDamageEffects(Transform newParent)
 }
 ```
 
-`GetComponentsInChildren`로 먼저 배열을 만든 뒤 반복하며 재부모 지정한다 — `foreach (Transform child in transform)`처럼 순회 중에 자식 목록을 바꾸면 인덱스가 밀려 일부를 건너뛸 수 있어 피한다.
+`GetComponentsInChildren`로 먼저 배열을 만든 뒤 반복하며 재부모 지정한다 — `foreach (Transform child in transform)`처럼 순회 중에 자식 목록을 바꾸면 인덱스가 밀려 일부를 건너뛸 수 있어 피한다. `worldPositionStays: true`이므로 스폰 시점에 이미 정해진 월드 z(결정 4)를 그대로 유지한 채 부모만 바뀐다 — 슬롯으로 옮길 때 위치를 다시 계산할 필요가 없다.
 
-이 메서드는 `friend.Die()` 호출 직전에 `InGameSceneManager`가 직접 호출한다(아래 결정 4).
+### 3. `ReleaseDamageEffects`를 호출하는 세 지점
 
-**왜 스폰 시점에 슬롯에 바로 붙이지 않는가**: `attack_0bj.prefab`의 로컬 z(-0.6)는 "`WorldFriend`의 자식"이 되는 것을 전제로 잡힌 값이다. `WorldFriend` 자신도 `SnapDepthToParent`로 슬롯보다 z -1만큼 앞에 그려지므로, 이펙트를 곧바로 슬롯의 자식으로 만들면 그 -1 단계를 건너뛰어 카드 스프라이트보다 뒤에 그려질 수 있다(로컬 z 보정을 다시 계산해야 함). `worldPositionStays: true`로 파괴 시점에만 옮기면 이미 올바르게 상속된 월드 z를 그대로 유지하므로 이 문제가 생기지 않는다.
+| 시점 | 위치 | 이유 |
+|---|---|---|
+| 스폰 직후, 공격 중이 아닐 때(타겟/능력 효과/치트/덱 소진) | `WorldFriend.TakeDamage`(결정 1) | 이미 자기 슬롯에 앉아있는 카드라 곧바로 슬롯 자식으로 승격 |
+| 공격자가 살아서 슬롯으로 복귀할 때 | `ResolveAttackRoutine`의 `attackerAlive` 분기 | 공격 중엔 이펙트가 카드를 따라 이동하다가, 슬롯 복귀가 확정되는 시점에 슬롯 자식으로 |
+| 친구카드가 파괴되기 직전(`Die()` 호출 전) | `TryHandleDeath`/`ApplyClausesToFriend`가 공통 헬퍼 `DestroyFriend`를 거쳐 | 파괴돼도 이펙트가 끊기지 않도록 안전한 부모로 미리 이전 |
 
-### 3. `Ease.OutBack` 팝인 + `Destroy(gameObject, delay)`로 자동 파괴
+```csharp
+// ResolveAttackRoutine, attackerAlive 분기
+attacker.SetParent(_attackerSlot.transform); // 공격 레이어에서 원래 슬롯으로 복귀
+attacker.SetHighlight(false, Color.clear);
+attacker.EnterIdle();
+attacker.ReleaseDamageEffects(_attackerSlot.transform); // 슬롯으로 돌아왔으니 데미지 이펙트도 슬롯 자식으로
+```
+
+죽는 두 경로(`TryHandleDeath`/`ApplyClausesToFriend`)는 "그레이브야드 등록 → 슬롯 비우기 → `ReleaseDamageEffects` → `Die()`" 네 줄이 그대로 겹쳐, 공통 private 헬퍼 `DestroyFriend`로 뽑는다 — 두 곳 중 한쪽만 고치고 다른 쪽을 빠뜨리는 실수를 막는다.
+
+```csharp
+// InGameSceneManager.cs
+private void DestroyFriend(WorldFriend friend, FieldSlot slot)
+{
+    AddToGraveyard(slot.Index, friend.Key);
+    slot.RemoveFriend();
+    friend.ReleaseDamageEffects(slot.transform);
+    friend.Die();
+}
+```
+
+```csharp
+// TryHandleDeath 꼬리(부활 실패 이후)
+DestroyFriend(friend, slotTransform.GetComponent<FieldSlot>());
+```
+
+```csharp
+// ApplyClausesToFriend 사망 분기
+var slot = target.transform.parent.GetComponent<FieldSlot>();
+DestroyFriend(target, slot);
+```
+
+### 4. `Ease.OutBack` 팝인, 로컬 z·스케일은 프리팹 값 대신 코드가 보정
 
 ```csharp
 [SerializeField] private TextMeshPro _valueText;
 [SerializeField] private float _popDuration = 0.25f;
 [SerializeField] private float _holdDuration = 0.5f;
+[SerializeField] private float _localDepth = -1.5f;
 
 public static void Spawn(DamageEffect prefab, Transform parent, int amount)
 {
@@ -97,36 +131,22 @@ public static void Spawn(DamageEffect prefab, Transform parent, int amount)
 
 private void Show(int amount)
 {
+    var localPosition = transform.localPosition;
+    localPosition.z = _localDepth;
+    transform.localPosition = localPosition;
+
     _valueText.text = $"-{amount}";
+    var targetScale = transform.localScale; // 프리팹에 세팅된 원래 크기 — Vector3.one으로 고정하지 않는다
     transform.localScale = Vector3.zero;
-    transform.DOScale(Vector3.one, _popDuration).SetEase(Ease.OutBack);
+    transform.DOScale(targetScale, _popDuration).SetEase(Ease.OutBack);
     Destroy(gameObject, _popDuration + _holdDuration);
 }
 ```
 
-- `Ease.OutBack`은 현재 코드베이스에 없는 이즈라 이번이 첫 도입이다(기존엔 `OutQuint`/`InQuad`/`Linear`만 사용).
+- `Ease.OutBack`은 이 프로젝트에서 처음 쓰는 이즈다(기존엔 `OutQuint`/`InQuad`/`Linear`만 사용).
+- `_localDepth`(-1.5)는 부모가 `WorldFriend` 루트인 것을 전제로 잡은 값이다. `WorldFriend`의 실제 카드 그림(`Image` 자식)은 루트보다 z -1 더 앞에 있어(`WorldFriend.prefab` 구조), 이펙트가 카드보다 확실히 앞에 그려지려면 로컬 z가 -1보다 더 작아야 한다. `BaseStone`은 스프라이트가 같은 오브젝트에 있어 이 문제가 없지만, 두 경우 모두 안전하도록 같은 값(-1.5)으로 통일한다.
+- `targetScale`은 `Instantiate` 직후의 `localScale`(프리팹에 세팅된 크기)을 캡처해 애니메이션 목표로 쓴다 — `Vector3.one`으로 고정하면 프리팹 스케일이 1이 아닐 때 의도보다 작거나 크게 재생된다.
 - 코루틴 없이 `Destroy(gameObject, delay)`로 지연 파괴한다 — 인스턴스가 1회성이라 `DOKill()`로 트윈 겹침을 방지할 필요도 없다.
-- `_popDuration`/`_holdDuration`은 인스펙터에서 조정 가능한 기본값 제안일 뿐 — 실제 느낌은 에디터에서 확인 후 튜닝한다.
-
-### 4. `ReleaseDamageEffects`를 `Die()` 호출 직전에 끼워 넣는다
-
-친구카드가 실제로 파괴되는 두 지점(`TryHandleDeath`/`ApplyClausesToFriend`)은 이미 [친구카드 상태 머신 계획](plan-ingame-friendstate.md)이 "그레이브야드 등록 → 슬롯 비우기 → `friend.Die()`" 순서로 정리해뒀다. 이 문서가 할 일은 그 흐름에 새 코드를 추가하는 게 아니라, `Die()` 호출 바로 앞에 `ReleaseDamageEffects` 한 줄을 끼워 넣는 것뿐이다 — 진동(`Die()` 내부)이 시작되기 전에 이펙트가 이미 안전한 부모 아래 있어야 하기 때문이다.
-
-```csharp
-// TryHandleDeath 꼬리(부활 실패 이후)
-AddToGraveyard(deadSlot.Index, friend.Key);
-deadSlot.RemoveFriend();
-friend.ReleaseDamageEffects(deadSlot.transform); // Die() 진동보다 먼저 이전
-friend.Die();
-```
-
-```csharp
-// ApplyClausesToFriend 사망 분기
-AddToGraveyard(slot.Index, target.Key);
-slot.RemoveFriend();
-target.ReleaseDamageEffects(slot.transform);
-target.Die();
-```
 
 ---
 
@@ -137,12 +157,13 @@ DamageEffect : MonoBehaviour                              (신규, InGame/)
 ├── _valueText : TextMeshPro [SerializeField]
 ├── _popDuration : float = 0.25f [SerializeField]
 ├── _holdDuration : float = 0.5f [SerializeField]
+├── _localDepth : float = -1.5f [SerializeField]            ← WorldFriend의 Image 자식(z -1)보다 앞에 그려지도록 고정
 ├── Spawn(DamageEffect prefab, Transform parent, int amount) : static void  ← parent 자식으로 생성
-└── Show(int amount)                                        ← private, 텍스트 설정 + OutBack 팝인 + 지연 파괴
+└── Show(int amount)                                        ← private, 로컬 z 고정 + 텍스트 설정 + OutBack 팝인 + 지연 파괴
 
 WorldFriend (기존 파일 수정, InGame/ — Die()/State는 [친구카드 상태 머신 계획]에서 이미 구현됨)
 ├── _damageEffectPrefab : DamageEffect [SerializeField]     ← 신규
-├── TakeDamage(int amount)                                   ← 수정, shield 조기 반환 이후 DamageEffect.Spawn 호출 추가
+├── TakeDamage(int amount)                                   ← 수정, DamageEffect.Spawn 호출 + State != Attack이면 즉시 ReleaseDamageEffects
 └── ReleaseDamageEffects(Transform newParent)                ← 신규, 자식 DamageEffect들을 재부모 지정
 
 BaseStone (기존 파일 수정, InGame/)
@@ -150,8 +171,10 @@ BaseStone (기존 파일 수정, InGame/)
 └── TakeDamage(int amount)                                   ← 수정, DamageEffect.Spawn 호출 추가
 
 InGameSceneManager (기존 파일 수정, InGame/)
-├── TryHandleDeath(...)           ← 수정, friend.Die() 호출 직전에 friend.ReleaseDamageEffects(deadSlot.transform) 추가
-└── ApplyClausesToFriend(...)     ← 수정, target.Die() 호출 직전에 target.ReleaseDamageEffects(slot.transform) 추가
+├── ResolveAttackRoutine(...)     ← 수정, attackerAlive 분기에서 attacker.ReleaseDamageEffects(_attackerSlot.transform) 추가
+├── DestroyFriend(WorldFriend friend, FieldSlot slot)  ← 신규 private, 그레이브야드 등록/슬롯 비우기/ReleaseDamageEffects/Die() 공통 처리
+├── TryHandleDeath(...)           ← 수정, 사망 꼬리 로직을 DestroyFriend 호출로 교체
+└── ApplyClausesToFriend(...)     ← 수정, 사망 분기를 DestroyFriend 호출로 교체
 ```
 
 ---
@@ -163,7 +186,7 @@ Assets/Scripts/InGame/
 ├── DamageEffect.cs             ← 신규
 ├── WorldFriend.cs              ← 기존 파일 수정
 ├── BaseStone.cs                ← 기존 파일 수정
-└── InGameSceneManager.cs       ← 기존 파일 수정(TryHandleDeath/ApplyClausesToFriend에 ReleaseDamageEffects 호출 추가)
+└── InGameSceneManager.cs       ← 기존 파일 수정(ResolveAttackRoutine/TryHandleDeath/ApplyClausesToFriend에 ReleaseDamageEffects 호출 추가)
 
 Assets/Prefabs/
 └── attack_0bj.prefab           ← 기존 파일(이미 존재) 수정 — 루트에 DamageEffect 컴포넌트 부착
@@ -198,7 +221,8 @@ Assets/Prefabs/
 |---|---|
 | `WorldFriend`가 방어막(`HasShield`)으로 피해를 완전히 막음 | 이펙트 생성 안 함 — `TakeDamage`의 shield 조기 반환 이전에는 스폰 호출에 도달하지 않음 |
 | 데미지 이펙트가 재생되는 도중 피격 대상이 사망 확정됨(공격자·타겟·능력 효과 대상 모두) | `TryHandleDeath`/`ApplyClausesToFriend`가 `Die()` 호출 직전 `ReleaseDamageEffects(slot.transform)`로 이펙트를 슬롯으로 옮김 — 이펙트는 끊기지 않고 끝까지 재생 |
-| 공격자가 타격 후 제자리로 복귀하며 살아남는 경우 | 이펙트는 계속 공격자의 자식으로 남아 함께 이동한 뒤 자기 타이머로 자연 파괴 — 죽지 않는 한 위험하지 않으므로 굳이 옮기지 않음 |
+| 타겟이 피격됨(공격 상태가 아닌 카드) | `TakeDamage` 안에서 `State != Attack`이 바로 참이라, 스폰 직후 곧바로 슬롯 자식으로 승격됨(카드가 그 뒤 죽든 살든 이미 슬롯에 있어 안전) |
+| 공격자가 타격 후 제자리로 복귀하며 살아남는 경우 | 이동하는 동안은 계속 공격자의 자식으로 따라다니다가, `ResolveAttackRoutine`이 슬롯으로 복귀시키는 시점에 `ReleaseDamageEffects`로 슬롯 자식으로 넘어감 |
 | 포자감염(`SpawnMark`)으로 같은 슬롯에 새 카드가 즉시 스폰됨 | 죽은 카드가 `Die()`의 진동(기본 0.2초, [친구카드 상태 머신 계획] 참고)이 끝날 때까지 잠깐 같은 슬롯 아래 남아 새 카드와 짧게 겹쳐 보일 수 있음 — 이 문서와 무관한 기존 트레이드오프 |
 | 능력 효과(`CardEffectClauseKind.Damage`)로 죽는 경우 | 복귀 연출이 없을 뿐, 전투 사망과 동일하게 `ReleaseDamageEffects` 후 `Die()`를 거침 |
 | 치트(`CheatDamageSlot`)로 죽는 경우 | `TryHandleDeath`를 그대로 재사용하므로 동일하게 이펙트 이전 후 파괴됨 |
@@ -210,9 +234,9 @@ Assets/Prefabs/
 
 | # | 시나리오 | 기대 결과 |
 |---|---|---|
-| 1 | 친구-친구 전투, 둘 다 생존 | 각자 위치에서 `-N` 텍스트가 `Ease.OutBack`으로 팝인 후 자기 타이머로 사라짐, 카드는 진동 없이 그대로 필드에 남음 |
-| 2 | 친구-친구 전투, 타겟이 즉사 | 타겟 카드가 `Die()`로 짧게 진동한 뒤 사라지고, 데미지 이펙트는 미리 슬롯으로 옮겨져 원래 타이머대로 끝까지 재생됨 |
-| 3 | 친구-친구 전투, 공격자가 반격으로 즉사 | 공격자가 제자리로 복귀하는 동안 이펙트가 함께 따라 움직이다가, 복귀 직후 `Die()`로 진동→파괴되며 이펙트는 슬롯에 남아 계속 재생됨 |
+| 1 | 친구-친구 전투, 둘 다 생존 | 타겟 쪽 이펙트는 스폰 즉시 슬롯 자식으로, 공격자 쪽 이펙트는 복귀 이동을 따라간 뒤 슬롯 복귀 시점에 슬롯 자식으로 넘어감 — 둘 다 `Ease.OutBack` 팝인 후 자기 타이머로 사라지고 카드는 진동 없이 필드에 남음 |
+| 2 | 친구-친구 전투, 타겟이 즉사 | 타겟 이펙트는 스폰 즉시 이미 슬롯 자식이라, 타겟 카드가 `Die()`로 진동 후 사라져도 영향 없이 원래 타이머대로 끝까지 재생됨 |
+| 3 | 친구-친구 전투, 공격자가 반격으로 즉사 | 공격자가 제자리로 복귀하는 동안 이펙트가 함께 따라 움직이다가, 복귀 직후 `Die()`로 진동→파괴되며(슬롯 복귀 자체가 무산되므로 `ReleaseDamageEffects`는 `TryHandleDeath` 쪽에서 실행) 이펙트는 슬롯에 남아 계속 재생됨 |
 | 4 | 친구-베이스 전투(타겟 슬롯이 비어 본체 피격) | 해당 진영 `BaseStone`에 `-N` 이펙트가 재생됨(베이스는 파괴되지 않으므로 이전 로직 자체가 관여하지 않음) |
 | 5 | 방어막을 보유한 `WorldFriend`가 피격됨 | 이펙트가 생성되지 않음(체력 텍스트도 변화 없음) |
 | 6 | 능력 효과 피해로 카드가 사망 | `ApplyClausesToFriend`의 사망 분기에서도 동일하게 이펙트가 먼저 이전된 뒤 `Die()`로 파괴, 이펙트는 슬롯에서 끝까지 재생 |
@@ -222,9 +246,9 @@ Assets/Prefabs/
 
 ## 구현 시 주의사항
 
-- `attack_0bj.prefab`의 루트 로컬 z(-0.6)/`value` 자식의 회전(z 20도)·폰트 크기(4.4)는 이미 세팅돼 있어 그대로 쓰되, `WorldFriend`/`BaseStone` 자식으로 붙었을 때 카드/베이스 스프라이트보다 앞에 그려지는지, 크기(5.12×5.12)가 필드 스케일과 맞는지는 에디터에서 실제로 확인해야 한다.
+- `attack_0bj.prefab` 루트의 로컬 z는 `Show()`가 `_localDepth`(-1.5)로 항상 덮어쓴다 — 프리팹 자체에 저장된 z 값은 의미가 없다. 스케일도 마찬가지로 `Show()`가 `Instantiate` 시점의 값을 캡처해 그대로 애니메이션 목표로 쓰므로, 루트 스케일은 프리팹에서 원하는 크기로 자유롭게 바꿔도 된다. `value` 자식의 회전(z 20도)·폰트 크기(4.4)는 그대로 쓰되, 실제 필드 스케일과 맞는지는 에디터에서 확인해야 한다.
 - `ReleaseDamageEffects`는 `GetComponentsInChildren<DamageEffect>()`로 먼저 배열을 뽑은 뒤 반복해야 한다 — `foreach (Transform child in transform)`처럼 순회 중 자식 목록 자체를 바꾸면 인덱스가 밀려 일부 이펙트를 놓칠 수 있다.
-- `TryHandleDeath`/`ApplyClausesToFriend`에서 `ReleaseDamageEffects`는 반드시 `Die()` 호출보다 먼저 실행돼야 한다 — `Die()`가 곧바로 진동을 시작하므로, 그 전에 이펙트가 이미 안전한 부모 아래 있어야 한다.
+- `DestroyFriend` 내부에서 `ReleaseDamageEffects`는 반드시 `Die()` 호출보다 먼저 실행돼야 한다 — `Die()`가 곧바로 진동을 시작하므로, 그 전에 이펙트가 이미 안전한 부모 아래 있어야 한다.
 - `WorldFriend.prefab`과 씬의 두 `BaseStone` 인스턴스(`mybase`/`oppobase`) 모두에 `_damageEffectPrefab`을 각각 연결해야 한다 — 공용 리소스 로더(`Resources.Load` 등)를 새로 만들지 않고 기존 `SerializeField` 참조 관례를 그대로 따른다.
 - 텍스트는 `$"-{amount}"` 형식으로 고정 — `TakeDamage`는 항상 양수 피해량만 받으므로 부호 반전이나 색상 분기는 만들지 않는다.
 
@@ -243,9 +267,9 @@ Assets/Prefabs/
 
 ## 구현 후 체크리스트
 
-- [ ] `DamageEffect.cs` 작성, `attack_0bj.prefab` 루트에 부착 및 `_valueText` 연결
-- [ ] `WorldFriend.cs`에 `_damageEffectPrefab` 필드 추가, `TakeDamage`에 스폰 호출 추가, `ReleaseDamageEffects` 구현, `WorldFriend.prefab`에 프리팹 연결
-- [ ] `BaseStone.cs`에 `_damageEffectPrefab` 필드 추가 + `TakeDamage`에 스폰 호출 추가, `mybase`/`oppobase` 두 인스턴스에 각각 프리팹 연결
-- [ ] `InGameSceneManager.cs`의 `TryHandleDeath`/`ApplyClausesToFriend`에서 `friend.Die()`/`target.Die()` 호출 직전에 `ReleaseDamageEffects` 호출 추가
-- [ ] 에디터에서 친구-친구(생존/타겟 사망/공격자 사망), 친구-베이스, 방어막 보유, 능력 효과 사망, 포자감염 케이스 실제 재생 확인(z-깊이/크기/이펙트 이전 타이밍 포함)
-- [ ] [InGame 로직 개요](plan-ingame.md) 체크리스트에 이 문서 링크 추가
+- [x] `DamageEffect.cs` 작성, `attack_0bj.prefab` 루트에 부착 및 `_valueText` 연결
+- [x] `WorldFriend.cs`에 `_damageEffectPrefab` 필드 추가, `TakeDamage`에 스폰 호출 + `State != Attack`이면 즉시 `ReleaseDamageEffects` 호출 추가, `ReleaseDamageEffects` 구현, `WorldFriend.prefab`에 프리팹 연결
+- [x] `BaseStone.cs`에 `_damageEffectPrefab` 필드 추가 + `TakeDamage`에 스폰 호출 추가, `mybase`/`oppobase` 두 인스턴스에 각각 프리팹 연결
+- [x] `InGameSceneManager.cs`의 `ResolveAttackRoutine`(attackerAlive 분기)에 `ReleaseDamageEffects` 호출 추가, `TryHandleDeath`/`ApplyClausesToFriend`의 사망 처리를 공통 헬퍼 `DestroyFriend`로 통합
+- [ ] 에디터에서 친구-친구(생존/타겟 사망/공격자 사망), 친구-베이스, 방어막 보유, 능력 효과 사망, 포자감염 케이스 실제 재생 확인(z-깊이/크기/이펙트 이전 타이밍 포함) — 프리팹/씬 필드는 YAML을 직접 편집해 연결했으므로, Unity 에디터에서 한 번 열어 `attack_0bj`/`WorldFriend`/`mybase`·`oppobase`의 `_damageEffectPrefab` 슬롯이 실제로 채워져 보이는지도 함께 확인 필요
+- [x] [InGame 로직 개요](plan-ingame.md) 체크리스트에 이 문서 링크 추가

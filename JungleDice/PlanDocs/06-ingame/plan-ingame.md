@@ -85,7 +85,7 @@ InGame 씬 진입 (GameSession.CurrentGameType == Solo)
 - [ ] [plan-ingame-log.md](plan-ingame-log.md) 구현 — 인게임 진행 로그 래핑(`InGameLog`) + 에디터 on/off 토글
 - [ ] [plan-ingame-handpanel-responsive.md](plan-ingame-handpanel-responsive.md) 구현 — hand 패널 화면비 대응(화면이 좁으면 폭 축소)
 - [x] [worldspace/plan-ingame-worldspace.md](worldspace/plan-ingame-worldspace.md) 구현 — 필드 슬롯/본체(`BaseStone`)를 uGUI에서 world space `SpriteRenderer` 기반으로 전환, 필드용 친구카드는 UI 버전(`Friend`)을 유지한 채 world space 버전(`WorldFriend`) 신설
-- [ ] [plan-ingame-damage-effect.md](plan-ingame-damage-effect.md) 구현 — `ResolveAttackRoutine`의 "타격 이펙트 재생 지점"을 채우는 데미지 숫자 팝업(`DamageEffect`). 사망 시 진동+지연 파괴 설계는 [plan-ingame-friendstate.md](plan-ingame-friendstate.md)로 대체됨
+- [x] [plan-ingame-damage-effect.md](plan-ingame-damage-effect.md) 구현 — `ResolveAttackRoutine`의 "타격 이펙트 재생 지점"을 채우는 데미지 숫자 팝업(`DamageEffect`). 사망 시 진동+지연 파괴 설계는 [plan-ingame-friendstate.md](plan-ingame-friendstate.md)로 대체됨. 프리팹/씬 필드 연결은 YAML 직접 편집으로 완료 — 에디터에서 실제 슬롯 확인 필요
 - [x] [plan-ingame-friendstate.md](plan-ingame-friendstate.md) 구현 — `WorldFriend` 생명주기를 `Spawn/Idle/Attack/Dead/Destroying` 명시적 상태로 관리, 사망 시 진동 후 파괴
 - [ ] (추후) 컴퓨터 진영 결과 위젯
 - [ ] (추후) `GameType.Battle` 모드의 InGame 로직 별도 계획 문서

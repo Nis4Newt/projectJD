@@ -1,6 +1,6 @@
 # 친구카드 상태 머신 구현 계획
 
-> 상위 문서: [데미지 이펙트 구현 계획](plan-ingame-damage-effect.md) — "사망 확정 시 진동 후 지연 파괴"(`PlayDeathShake`+`DestroyDeadFriend`)를 이미 설계했으나 미구현 상태였다. 이번 문서가 그 사망 처리 설계를 명시적 상태(enum)로 대체해 구현한다. 공격 상태는 [공격 판정 계획](plan-ingame-attack.md)이 이미 구현한 `ResolveAttackRoutine`의 연출 흐름에 상태 전이만 얹는다.
+> 상위 문서: [데미지 이펙트 구현 계획](plan-ingame-damage-effect.md) — "사망 확정 시 진동 후 지연 파괴" 연출을 이미 설계했으나 미구현 상태였다. 이번 문서가 그 사망 처리를 명시적 상태(enum)로 구현한다. 공격 상태는 [공격 판정 계획](plan-ingame-attack.md)이 이미 구현한 `ResolveAttackRoutine`의 연출 흐름에 상태 전이만 얹는다.
 > 의존 관계: `JungleDice.InGame.WorldFriend`, `JungleDice.InGame.InGameSceneManager`(`ResolveAttackRoutine`/`TryHandleDeath`/`ApplyClausesToFriend`), `DG.Tweening`
 > 범위: 필드에 배치되는 `WorldFriend`의 생명주기를 `Spawn → Idle ⇄ Attack`, `(Idle/Attack) → Dead → Destroying → 실제 파괴`로 명시적 상태(enum)로 관리한다. 사망 확정 시 짧은 진동(Dead)만 연출하고, 진동이 끝나면 곧바로 `Destroying`으로 전이해 `Destroy`를 실행한다(Destroying 자체는 별도 연출 없음). 덱 미리보기용 `Friend`(UI)는 전투에 참여하지 않아 대상이 아니다([WorldFriend 신설 계획](worldspace/plan-ingame-worldspace-worldfriend.md)이 이미 "`Friend.cs`는 수정하지 않는다"로 확정한 정책을 그대로 따름). 데미지 숫자 팝업(`DamageEffect`)·타격음·부활/포자감염 판정 로직 자체는 범위 밖(기존 로직 그대로, 상태 전이 지점만 이 문서가 제공).
 
@@ -115,16 +115,13 @@ private void EnterDestroying()
 }
 ```
 
-`InGameSceneManager`의 두 사망 처리 지점을 "즉시 `Destroy`"에서 "그레이브야드/슬롯 정리 후 `Die()` 호출"로 교체한다.
+`InGameSceneManager`의 두 사망 처리 지점을 "즉시 `Destroy`"에서 "그레이브야드/슬롯 정리 후 `Die()` 호출"로 교체한다. 두 지점의 정리 로직이 동일해 공통 private 헬퍼 `DestroyFriend(WorldFriend, FieldSlot)`로 묶여 있다([데미지 이펙트 계획](plan-ingame-damage-effect.md) 결정 3 — 그 문서가 추가한 `ReleaseDamageEffects` 호출도 이 헬퍼 안에 있다).
 
 ```csharp
 // TryHandleDeath 꼬리(부활 실패 이후)
 bool hasSpawnMark = friend.SpawnMark.HasMark;
 int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
-var deadSlot = slotTransform.GetComponent<FieldSlot>();
-AddToGraveyard(deadSlot.Index, friend.Key);
-deadSlot.RemoveFriend();
-friend.Die();
+DestroyFriend(friend, slotTransform.GetComponent<FieldSlot>());
 if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
 return false;
 ```
@@ -134,9 +131,7 @@ return false;
 if (target.IsDead)
 {
     var slot = target.transform.parent.GetComponent<FieldSlot>();
-    AddToGraveyard(slot.Index, target.Key);
-    slot.RemoveFriend();
-    target.Die();
+    DestroyFriend(target, slot);
 }
 ```
 
@@ -215,7 +210,7 @@ Assets/Scripts/InGame/
 
 ## 이번 범위에서 제외
 
-- 데미지 숫자 팝업(`DamageEffect`)·타격음 — [데미지 이펙트 계획](plan-ingame-damage-effect.md)의 남은 몫(팝업 프리팹/사운드)은 이 문서와 무관하게 여전히 유효하다. `TakeDamage` 내부에 그대로 추가할 수 있는 독립적인 관심사라 상태 머신과 얽히지 않는다.
+- 데미지 숫자 팝업(`DamageEffect`)·타격음 — [데미지 이펙트 계획](plan-ingame-damage-effect.md)의 남은 몫(팝업 프리팹/사운드)은 이 문서와 무관하게 여전히 유효하다. 스폰(`TakeDamage` 내부)은 상태 머신과 완전히 독립적이지만, `Die()` 호출 직전에 `ReleaseDamageEffects` 한 줄을 끼워 넣어야 하는 지점 하나는 이 문서가 만든 `Die()`에 의존한다(그 문서의 결정 3 참고).
 - 스폰 연출(파티클 등) — `Spawn` 상태는 구조적으로만 존재하고 지금은 `SetKey` 즉시 `Idle`로 전이한다. 실제 스폰 연출이 필요해지면(추후) 이 전이 시점만 지연시키면 된다.
 - `Friend`(UI, 덱 미리보기) — 전투에 참여하지 않아 상태 머신 대상이 아님, 기존 "수정 금지" 정책 유지.
 
