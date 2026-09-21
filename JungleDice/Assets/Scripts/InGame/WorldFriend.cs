@@ -19,6 +19,7 @@ namespace JungleDice.InGame
         [SerializeField] private ParticleSystemRenderer _highlightRendererMaterial; // _highlightRenderer와 같은 오브젝트 — 베이스맵 텍스처 제어용
         [SerializeField] private float _deathShakeDuration = 0.2f;
         [SerializeField] private float _deathShakeStrength = 0.15f;
+        [SerializeField] private DamageEffect _damageEffectPrefab;
 
         private void Awake()
         {
@@ -83,6 +84,13 @@ namespace JungleDice.InGame
         public void EnterAttack() => State = FriendState.Attack;
         public void EnterIdle() => State = FriendState.Idle;
 
+        // 파괴되기 전 아직 재생 중인 데미지 이펙트를 안전한 부모(보통 자신의 FieldSlot)로 옮긴다 — 이 오브젝트가 사라져도 이펙트는 끝까지 재생된다
+        public void ReleaseDamageEffects(Transform newParent)
+        {
+            foreach (var effect in GetComponentsInChildren<DamageEffect>(true))
+                effect.transform.SetParent(newParent, worldPositionStays: true);
+        }
+
         // 사망 확정된 카드를 파괴한다 — 이미 Dead/Destroying이면 무시(같은 프레임에 중복 호출되는 것을 방어)
         public void Die()
         {
@@ -107,6 +115,9 @@ namespace JungleDice.InGame
                 HasShield = false;
                 return; // 이번 피해 전부 무효, 텍스트/색 변화 없음
             }
+
+            DamageEffect.Spawn(_damageEffectPrefab, transform, amount);
+            if (State != FriendState.Attack) ReleaseDamageEffects(transform.parent); // 공격 중이 아니면 이미 슬롯에 있는 것 — 곧바로 슬롯 자식으로
 
             int previousHp = CurrentHp;
             CurrentHp = Mathf.Max(0, CurrentHp - amount);

@@ -5584,3 +5584,6 @@ MonoBehaviour:
   _hpText: {fileID: 4323711205978020165}
   _highlightRenderer: {fileID: 8581353884110892259}
   _highlightRendererMaterial: {fileID: 3409657749713205167}
+  _deathShakeDuration: 0.2
+  _deathShakeStrength: 0.15
+  _damageEffectPrefab: {fileID: 1330305697, guid: 6fad0984c3f7fbd47acc895ba3dcf7ed, type: 3}

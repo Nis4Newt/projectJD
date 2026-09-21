@@ -354,6 +354,7 @@ namespace JungleDice.InGame
                 attacker.SetParent(_attackerSlot.transform); // 공격 레이어에서 원래 슬롯으로 복귀
                 attacker.SetHighlight(false, Color.clear);
                 attacker.EnterIdle(); // 생존 또는 부활 성공 — Attack 종료, Idle로 복귀
+                attacker.ReleaseDamageEffects(_attackerSlot.transform); // 슬롯으로 돌아왔으니 데미지 이펙트도 슬롯 자식으로
             }
 
             if (targetFriend != null)
@@ -806,9 +807,7 @@ namespace JungleDice.InGame
             if (target.IsDead)
             {
                 var slot = target.transform.parent.GetComponent<FieldSlot>();
-                AddToGraveyard(slot.Index, target.Key);
-                slot.RemoveFriend();
-                target.Die();
+                DestroyFriend(target, slot);
             }
         }
 
@@ -845,12 +844,18 @@ namespace JungleDice.InGame
 
             bool hasSpawnMark = friend.SpawnMark.HasMark;
             int spawnKey = friend.SpawnMark.Key, spawnAtt = friend.SpawnMark.Att, spawnHp = friend.SpawnMark.Hp;
-            var deadSlot = slotTransform.GetComponent<FieldSlot>();
-            AddToGraveyard(deadSlot.Index, friend.Key);
-            deadSlot.RemoveFriend();
-            friend.Die();
+            DestroyFriend(friend, slotTransform.GetComponent<FieldSlot>());
             if (hasSpawnMark) SpawnFriendDirectly(spawnKey, spawnAtt, spawnHp, slotTransform);
             return false;
+        }
+
+        // 사망 확정된 친구카드의 공통 파괴 처리 — 그레이브야드 등록/슬롯 비우기/데미지 이펙트 이전은 즉시, 실제 파괴는 Die()가 자체 진동 시간만큼 지연시킨다
+        private void DestroyFriend(WorldFriend friend, FieldSlot slot)
+        {
+            AddToGraveyard(slot.Index, friend.Key);
+            slot.RemoveFriend();
+            friend.ReleaseDamageEffects(slot.transform);
+            friend.Die();
         }
 
         private void SpawnFriendDirectly(int key, int att, int hp, Transform slotTransform)
