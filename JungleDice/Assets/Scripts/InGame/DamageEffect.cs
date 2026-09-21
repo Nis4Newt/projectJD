@@ -6,6 +6,7 @@ namespace JungleDice.InGame
 {
     public class DamageEffect : MonoBehaviour
     {
+        [SerializeField] private SpriteRenderer _backgroundRenderer;
         [SerializeField] private TextMeshPro _valueText;
         [SerializeField] private float _popDuration = 0.25f;
         [SerializeField] private float _holdDuration = 0.5f;
@@ -25,8 +26,15 @@ namespace JungleDice.InGame
             _valueText.text = $"-{amount}";
             var targetScale = transform.localScale; // 프리팹에 세팅된 원래 크기 — Vector3.one으로 고정하지 않는다
             transform.localScale = Vector3.zero;
-            transform.DOScale(targetScale, _popDuration).SetEase(Ease.OutBack);
-            Destroy(gameObject, _popDuration + _holdDuration);
+            transform.DOScale(targetScale, _popDuration).SetEase(Ease.OutBack).OnComplete(FadeOutAndDestroy);
+        }
+
+        // 팝인이 끝난 뒤 holdDuration 동안 배경/텍스트를 서서히 투명하게 만들고, 그 시간이 끝나면 파괴한다
+        private void FadeOutAndDestroy()
+        {
+            _backgroundRenderer.DOFade(0f, _holdDuration);
+            DOTween.To(() => _valueText.alpha, a => _valueText.alpha = a, 0f, _holdDuration); // TextMeshPro용 DOTween 모듈이 없어 DOTween.To로 직접 트윈
+            Destroy(gameObject, _holdDuration);
         }
     }
 }

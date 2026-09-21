@@ -119,6 +119,7 @@ DestroyFriend(target, slot);
 ### 4. `Ease.OutBack` 팝인, 로컬 z·스케일은 프리팹 값 대신 코드가 보정
 
 ```csharp
+[SerializeField] private SpriteRenderer _backgroundRenderer;
 [SerializeField] private TextMeshPro _valueText;
 [SerializeField] private float _popDuration = 0.25f;
 [SerializeField] private float _holdDuration = 0.5f;
@@ -138,14 +139,28 @@ private void Show(int amount)
     _valueText.text = $"-{amount}";
     var targetScale = transform.localScale; // 프리팹에 세팅된 원래 크기 — Vector3.one으로 고정하지 않는다
     transform.localScale = Vector3.zero;
-    transform.DOScale(targetScale, _popDuration).SetEase(Ease.OutBack);
-    Destroy(gameObject, _popDuration + _holdDuration);
+    transform.DOScale(targetScale, _popDuration).SetEase(Ease.OutBack).OnComplete(FadeOutAndDestroy);
 }
 ```
 
 - `Ease.OutBack`은 이 프로젝트에서 처음 쓰는 이즈다(기존엔 `OutQuint`/`InQuad`/`Linear`만 사용).
 - `_localDepth`(-1.5)는 부모가 `WorldFriend` 루트인 것을 전제로 잡은 값이다. `WorldFriend`의 실제 카드 그림(`Image` 자식)은 루트보다 z -1 더 앞에 있어(`WorldFriend.prefab` 구조), 이펙트가 카드보다 확실히 앞에 그려지려면 로컬 z가 -1보다 더 작아야 한다. `BaseStone`은 스프라이트가 같은 오브젝트에 있어 이 문제가 없지만, 두 경우 모두 안전하도록 같은 값(-1.5)으로 통일한다.
 - `targetScale`은 `Instantiate` 직후의 `localScale`(프리팹에 세팅된 크기)을 캡처해 애니메이션 목표로 쓴다 — `Vector3.one`으로 고정하면 프리팹 스케일이 1이 아닐 때 의도보다 작거나 크게 재생된다.
+
+### 5. 팝인이 끝나면 `_holdDuration` 동안 페이드아웃 후 파괴
+
+```csharp
+// 팝인이 끝난 뒤 holdDuration 동안 배경/텍스트를 서서히 투명하게 만들고, 그 시간이 끝나면 파괴한다
+private void FadeOutAndDestroy()
+{
+    _backgroundRenderer.DOFade(0f, _holdDuration);
+    DOTween.To(() => _valueText.alpha, a => _valueText.alpha = a, 0f, _holdDuration); // TextMeshPro용 DOTween 모듈이 없어 DOTween.To로 직접 트윈
+    Destroy(gameObject, _holdDuration);
+}
+```
+
+- `_holdDuration`은 "고정 표시 시간"에서 "페이드아웃 지속 시간"으로 의미가 바뀐다 — 팝인 직후 곧바로 투명해지기 시작해, 그 끝에서 완전히 사라지는 동시에 파괴된다.
+- `SpriteRenderer`는 이 프로젝트에 이미 DOTween Sprite 모듈이 있어 `DOFade`를 그대로 쓴다. `TextMeshPro`(`TMP_Text`)용 DOTween 모듈은 이 프로젝트에 설치돼 있지 않아 `DOFade` 확장 메서드가 없으므로, `TMP_Text.alpha` 프로퍼티를 `DOTween.To`로 직접 트윈한다.
 - 코루틴 없이 `Destroy(gameObject, delay)`로 지연 파괴한다 — 인스턴스가 1회성이라 `DOKill()`로 트윈 겹침을 방지할 필요도 없다.
 
 ---
@@ -154,12 +169,14 @@ private void Show(int amount)
 
 ```
 DamageEffect : MonoBehaviour                              (신규, InGame/)
+├── _backgroundRenderer : SpriteRenderer [SerializeField]
 ├── _valueText : TextMeshPro [SerializeField]
 ├── _popDuration : float = 0.25f [SerializeField]
-├── _holdDuration : float = 0.5f [SerializeField]
+├── _holdDuration : float = 0.5f [SerializeField]           ← 페이드아웃 지속 시간으로 사용
 ├── _localDepth : float = -1.5f [SerializeField]            ← WorldFriend의 Image 자식(z -1)보다 앞에 그려지도록 고정
 ├── Spawn(DamageEffect prefab, Transform parent, int amount) : static void  ← parent 자식으로 생성
-└── Show(int amount)                                        ← private, 로컬 z 고정 + 텍스트 설정 + OutBack 팝인 + 지연 파괴
+├── Show(int amount)                                        ← private, 로컬 z 고정 + 텍스트 설정 + OutBack 팝인
+└── FadeOutAndDestroy()                                     ← private, 팝인 완료 콜백. 배경/텍스트 페이드아웃 + 지연 파괴
 
 WorldFriend (기존 파일 수정, InGame/ — Die()/State는 [친구카드 상태 머신 계획]에서 이미 구현됨)
 ├── _damageEffectPrefab : DamageEffect [SerializeField]     ← 신규
@@ -199,7 +216,7 @@ Assets/Prefabs/
 ```
 [Assets/Prefabs/attack_0bj.prefab] (기존 — 배경 SpriteRenderer + value 자식(TextMeshPro) 보유)
 └── attack_0bj(루트, SpriteRenderer: damageEff.png)
-    ├── DamageEffect.cs 부착(신규) — _valueText에 아래 value 연결
+    ├── DamageEffect.cs 부착(신규) — _backgroundRenderer에 루트 자신의 SpriteRenderer, _valueText에 아래 value 연결
     └── value(자식, TextMeshPro, 기존 그대로 유지)
 
 [Assets/Prefabs/WorldFriend.prefab]
@@ -234,7 +251,7 @@ Assets/Prefabs/
 
 | # | 시나리오 | 기대 결과 |
 |---|---|---|
-| 1 | 친구-친구 전투, 둘 다 생존 | 타겟 쪽 이펙트는 스폰 즉시 슬롯 자식으로, 공격자 쪽 이펙트는 복귀 이동을 따라간 뒤 슬롯 복귀 시점에 슬롯 자식으로 넘어감 — 둘 다 `Ease.OutBack` 팝인 후 자기 타이머로 사라지고 카드는 진동 없이 필드에 남음 |
+| 1 | 친구-친구 전투, 둘 다 생존 | 타겟 쪽 이펙트는 스폰 즉시 슬롯 자식으로, 공격자 쪽 이펙트는 복귀 이동을 따라간 뒤 슬롯 복귀 시점에 슬롯 자식으로 넘어감 — 둘 다 `Ease.OutBack` 팝인 후 배경/텍스트가 `_holdDuration` 동안 서서히 투명해지며 사라지고 카드는 진동 없이 필드에 남음 |
 | 2 | 친구-친구 전투, 타겟이 즉사 | 타겟 이펙트는 스폰 즉시 이미 슬롯 자식이라, 타겟 카드가 `Die()`로 진동 후 사라져도 영향 없이 원래 타이머대로 끝까지 재생됨 |
 | 3 | 친구-친구 전투, 공격자가 반격으로 즉사 | 공격자가 제자리로 복귀하는 동안 이펙트가 함께 따라 움직이다가, 복귀 직후 `Die()`로 진동→파괴되며(슬롯 복귀 자체가 무산되므로 `ReleaseDamageEffects`는 `TryHandleDeath` 쪽에서 실행) 이펙트는 슬롯에 남아 계속 재생됨 |
 | 4 | 친구-베이스 전투(타겟 슬롯이 비어 본체 피격) | 해당 진영 `BaseStone`에 `-N` 이펙트가 재생됨(베이스는 파괴되지 않으므로 이전 로직 자체가 관여하지 않음) |
@@ -267,7 +284,7 @@ Assets/Prefabs/
 
 ## 구현 후 체크리스트
 
-- [x] `DamageEffect.cs` 작성, `attack_0bj.prefab` 루트에 부착 및 `_valueText` 연결
+- [x] `DamageEffect.cs` 작성(팝인 + 페이드아웃 + 지연 파괴), `attack_0bj.prefab` 루트에 부착 및 `_backgroundRenderer`/`_valueText` 연결
 - [x] `WorldFriend.cs`에 `_damageEffectPrefab` 필드 추가, `TakeDamage`에 스폰 호출 + `State != Attack`이면 즉시 `ReleaseDamageEffects` 호출 추가, `ReleaseDamageEffects` 구현, `WorldFriend.prefab`에 프리팹 연결
 - [x] `BaseStone.cs`에 `_damageEffectPrefab` 필드 추가 + `TakeDamage`에 스폰 호출 추가, `mybase`/`oppobase` 두 인스턴스에 각각 프리팹 연결
 - [x] `InGameSceneManager.cs`의 `ResolveAttackRoutine`(attackerAlive 분기)에 `ReleaseDamageEffects` 호출 추가, `TryHandleDeath`/`ApplyClausesToFriend`의 사망 처리를 공통 헬퍼 `DestroyFriend`로 통합
