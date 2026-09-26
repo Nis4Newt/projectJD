@@ -7,6 +7,7 @@ namespace JungleDice.InGame
     {
         [SerializeField] private TextMeshPro _hpText;
         [SerializeField] private int _maxHp = 30;
+        [SerializeField] private DamageEffect _damageEffectPrefab;
 
         public int CurrentHp { get; private set; }
         public int MaxHp => _maxHp;
@@ -19,6 +20,7 @@ namespace JungleDice.InGame
 
         public void TakeDamage(int amount)
         {
+            DamageEffect.Spawn(_damageEffectPrefab, transform, amount);
             CurrentHp = Mathf.Max(0, CurrentHp - amount);
             _hpText.text = CurrentHp.ToString();
         }
